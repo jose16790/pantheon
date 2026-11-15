@@ -154,11 +154,19 @@ HTTPServer(('0.0.0.0',8080),H).serve_forever()"
 
 ## Themes
 
-```bash
-adb shell am start -n dev.pantheon.adultspace/.MainActivity --es theme got      # hogwarts | got | marvel
-```
+Pick one with the **crown** in the top row (Up from the dock, then Left), or by voice: "switch to Game of
+Thrones", "Hogwarts theme". The whole home changes with it.
 
-To finish a stub theme, put its pictures in `assets/www/themes/<id>/` and return them from that theme's `images()`.
+| Theme | Home | Mascot | Library |
+|---|---|---|---|
+| **Hogwarts** | the castle by the lake | Hedwig the owl hops between apps | the eight films |
+| **Game of Thrones** | a firelit throne room, torches burning live | a dragon hops between apps and **breathes fire on the one you pick**: it glows, chars, smoulders and cools back | the eight seasons, each with its own cover and a one-line caption |
+| **Marvel** | colours only for now | | |
+
+A theme is a `ThemeData` class (`theme/`) for its colours and pictures, plus, optionally, a scene in
+`themes/<id>.js` for its mascot, live effects and books (see `themes/got.js`).
+
+From a computer: `adb shell am start -n dev.pantheon.adultspace/.MainActivity --es theme got` (hogwarts | got | marvel).
 
 ## Credits
 

@@ -1,32 +1,37 @@
 package dev.pantheon.adultspace.theme;
 
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * STUB: a cold steel-and-ice palette. No pictures yet, so the castle backdrops stay.
- * To finish it, add assets/www/themes/got/{castle,shelf,greenhouse}.jpg (+ windows/mist if wanted)
- * and return them from images(), e.g. i.put("castle", "themes/got/castle.jpg").
+ * An unofficial Game of Thrones fan theme (see NOTICE.md): a firelit throne room with live torch flames, a dragon in
+ * place of the owl that breathes fire on the focused app, and the eight seasons in the library. Its scene is
+ * assets/www/themes/got.js; its pictures are img/got/ and dragon/ (original AI-generated art, tools/dragon_sprites.py).
  */
 public final class GameOfThronesTheme implements ThemeData {
     @Override public String id() { return "got"; }
     @Override public String displayName() { return "Game of Thrones"; }
-    @Override public int windowBackground() { return 0xFF05080B; }
+    @Override public int windowBackground() { return 0xFF060403; }
 
     @Override public Map<String, String> colors() {
         Map<String, String> c = new LinkedHashMap<>();
-        c.put("gold", "#9fb3c2");          // steel
-        c.put("gold-hi", "#dfe9f0");       // ice
-        c.put("ink", "#e9e4dc");           // bone
-        c.put("accent", "#c9b28a");        // old brass
-        c.put("accent-soft", "#d8d0c2");
-        c.put("spine", "#b9c6cf");
-        c.put("panel-1", "#0f1418");
-        c.put("panel-2", "#040506");
+        c.put("gold", "#c9a45c");          // old gold
+        c.put("gold-hi", "#f2d49a");       // firelight
+        c.put("ink", "#ede5d8");           // bone
+        c.put("accent", "#e8a070");        // ember
+        c.put("accent-soft", "#f0cfae");
+        c.put("spine", "#d8b470");
+        c.put("panel-1", "#16100d");
+        c.put("panel-2", "#060403");
         return c;
     }
 
-    @Override public Map<String, String> images() { return Collections.emptyMap(); }
-    @Override public boolean complete() { return false; }
+    @Override public Map<String, String> images() {
+        Map<String, String> i = new LinkedHashMap<>();
+        i.put("castle", "img/got/throne.jpg");
+        i.put("shelf", "img/got/shelf.jpg");
+        return i;
+    }
+
+    @Override public String mascot() { return "dragon"; }
 }

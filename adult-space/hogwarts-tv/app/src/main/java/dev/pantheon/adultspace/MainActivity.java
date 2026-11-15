@@ -179,6 +179,13 @@ public class MainActivity extends Activity {
     @Override protected void onPause() { if (showing == this) showing = null; web.onPause(); super.onPause(); }
     @Override protected void onDestroy() { voice.destroy(); web.destroy(); super.onDestroy(); }
 
+    /** Switch theme (voice: "switch to Game of Thrones"). False for an unknown id. */
+    public boolean switchTheme(String id) {
+        if (!themes.set(id)) return false;
+        applyTheme();
+        return true;
+    }
+
     /** Push the active theme into the page. */
     private void applyTheme() {
         ThemeData t = themes.current();

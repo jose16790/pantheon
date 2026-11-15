@@ -35,3 +35,6 @@ adult-space/docs/
 
 # per-TV undo lists written by scripts/unbloat.sh
 scripts/tvs/
+
+# the dragon and fire source clips (~30 MB): only needed to re-cut the sprites (tools/dragon_sprites.py, fire_sprites.py)
+adult-space/hogwarts/dragon/src/*.mp4

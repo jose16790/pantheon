@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
  *   "volume up" / "louder" / "turn it down" / "mute"           volume
  *   "set volume to 30" / "volume up by three" / "turn it down 5"  volume to a level (percent), or by steps
  *   "search for Dune" / "find The Bear"                        the TV's own search
+ *   "switch to Game of Thrones" / "Hogwarts theme"             change the theme
  *
  * Anything else ("put on the latest episode of The Bear", "what should we watch?") needs thinking, and goes to
  * the agent (AgentClient).
@@ -29,6 +30,10 @@ public final class LocalCommands {
     private static final Pattern STEP_VOLUME = Pattern.compile(
             "^(?:(?:turn )?(?:the )?volume (up|down|increase|decrease|raise|lower)|(increase|decrease|raise|lower) (?:the )?volume|turn (?:it|the volume) (up|down))(?: by)? (\\w+)(?: steps?| notches?| points?)?$");
     private static final String[] NUMBERS = { "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten" };
+
+    private static final Pattern THEME = Pattern.compile(
+            "^(?:(?:switch|change|go|set)(?: the theme)? to (?:the )?(hogwarts|harry potter|game of thrones|thrones|marvel)(?: theme| mode)?"
+            + "|(?:use |(?:put|turn) on )?(?:the )?(hogwarts|harry potter|game of thrones|got|thrones|marvel) (?:theme|mode))$");
 
     private static final Pattern SEARCH = Pattern.compile("^(?:search(?: for)?|find|look for|look up) (.+)$");
 
@@ -56,6 +61,12 @@ public final class LocalCommands {
         if (s.matches("(?:play|resume|continue|unpause)(?: it| this)?")) return did(a, "key", "play", "Playing");
         if (s.matches("(?:next|skip)(?: (?:episode|song|track|one))?")) return did(a, "key", "next", "Next");
         if (s.matches("(?:previous|go back)(?: (?:episode|song|track|one))?")) return did(a, "key", "previous", "Previous");
+
+        Matcher t = THEME.matcher(s);
+        if (t.matches() && a instanceof dev.pantheon.adultspace.MainActivity) {
+            String name = t.group(1) != null ? t.group(1) : t.group(2), id = name.contains("marvel") ? "marvel" : name.startsWith("hog") || name.startsWith("harry") ? "hogwarts" : "got";
+            if (((dev.pantheon.adultspace.MainActivity) a).switchTheme(id)) return log(said, "Welcome to " + dev.pantheon.adultspace.theme.ThemeManager.find(id).displayName());
+        }
 
         Matcher m = OPEN.matcher(s);
         if (m.matches() && Actions.launch(a, m.group(1))) return log(said, "Opening " + titleCase(m.group(1)));

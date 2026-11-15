@@ -133,7 +133,15 @@
   .face { position: absolute; backface-visibility: hidden; overflow: hidden; }
   .face .shade { position: absolute; inset: 0; background: #0b0603; opacity: 0; pointer-events: none; }
   .front { border-radius: 1px 4px 4px 1px; }
-  .front img { width: 100%; height: 100%; object-fit: cover; display: block; }   /* covers/aged: graded, hazed and worn by tools/age_covers.py */
+  .front img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  /* Pantheon: a one-line caption under the cover (a theme's books: f.caption), in Cinzel (fonts/, SIL OFL) */
+  @font-face { font-family: "Cinzel"; src: url(fonts/Cinzel.ttf) format("truetype"); font-weight: 400 900; font-display: block; }
+  .front.captioned img { height: calc(100% - 42px); }
+  .front .cap { position: absolute; left: 0; right: 0; bottom: 0; height: 42px; display: flex; align-items: center; justify-content: center;
+                padding: 0 8px; text-align: center; font-family: "Cinzel", Cochin, Georgia, serif; font-size: 13.5px; font-weight: 700;
+                letter-spacing: .06em; color: var(--gold-hi); line-height: 1.15;
+                background: linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.25)); border-top: 1px solid rgba(216,180,106,.45);
+                text-shadow: 0 1px 2px rgba(0,0,0,.8); }   /* covers/aged: graded, hazed and worn by tools/age_covers.py */
     .spine { display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 22px 0 18px; }
   .spine .bands { position: absolute; left: 0; right: 0; height: 7px; border-top: 1.5px solid rgba(214,176,92,.8); border-bottom: 1.5px solid rgba(214,176,92,.8); }
   .spine .roman { color: var(--spine); font-size: 15px; letter-spacing: .1em; margin-top: 22px; text-shadow: 0 1px 0 rgba(0,0,0,.6); }
@@ -230,13 +238,14 @@
     <div id="topIcons"><div id="gearTip">Customise</div>
       <svg id="wifi" viewBox="0 0 24 24" fill="none" stroke="#f4ead6" stroke-width="1.6" stroke-linecap="round"><path d="M2.5 9a14 14 0 0 1 19 0M5.5 12.5a9.5 9.5 0 0 1 13 0M8.6 15.8a5 5 0 0 1 6.8 0"/><circle cx="12" cy="19" r="1" fill="#f4ead6"/></svg>
       <svg id="tvset" viewBox="0 0 24 24" fill="none" stroke="#f4ead6" stroke-width="1.6" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>
+      <svg id="themesIcon" viewBox="0 0 24 24" fill="none" stroke="#f4ead6" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><path d="M3.5 18.5h17M4.5 16l-1.5-9 5 4 4-6.5 4 6.5 5-4-1.5 9z"/></svg>
       <svg id="mic" viewBox="0 0 24 24" fill="none" stroke="#f4ead6" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="11.5" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5v4M8.5 21.5h7"/></svg>
       <svg id="gear" viewBox="0 0 24 24" fill="none" stroke="#f4ead6" stroke-width="1.6" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2.8l1.6 2.2 2.7-.6.6 2.7 2.4 1.3-1 2.6 1 2.6-2.4 1.3-.6 2.7-2.7-.6L12 21.2l-1.6-2.2-2.7.6-.6-2.7-2.4-1.3 1-2.6-1-2.6 2.4-1.3.6-2.7 2.7.6z"/></svg>
     </div>
     <div id="glow"></div>
     <div id="dock"></div>
     <canvas id="dsp" width="1920" height="560"></canvas>
-    <canvas class="owl" id="owlIdle"></canvas><canvas class="owl" id="owlHop" style="visibility:hidden"></canvas>
+    <div id="mascot"></div>
     <div class="peek" id="toLib">The Library<svg viewBox="0 0 22 12" fill="none" stroke="#f4ead6" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 2l9 8 9-8"/></svg></div>
   </section>
 
@@ -303,6 +312,9 @@
 <script src="img/points.js"></script>
 <script src="img/layers.js"></script>
 <script src="owl/owl.js"></script>
+<script src="dragon/dragon.js"></script>
+<script src="dragon/fire.js"></script>
+<script src="themes/got.js"></script>
 <script src="themes/theme.js"></script>
 <script>
 const $ = s => document.querySelector(s);
@@ -420,25 +432,34 @@ function focusApp(i) {
 // ---------------------------------------------------------------- the owl: perched on the focused app, it hops across to the next one
 // two sprite sheets (owl/*.webp, tools/owl_sprites.py); in both the standing owl is 150 px tall and each records where its feet are,
 // so they swap without a jump. On screen the owl stands OWL_H px tall.
-const OWL_H = 128;
-const HOP = { up: 0.65, down: 2.22, end: 3.0, rate: 1.7 };  // in the hop clip: take-off, touch-down, settled (s); played 1.7x
-// each clip has its own canvas, sized to its cell and pinned at its feet, so switching never re-allocates one
-const SHEET = {};
-for (const k in OWL_SHEETS) {
-  const sh = SHEET[k] = Object.assign({ img: new Image() }, OWL_SHEETS[k]);
-  sh.img.src = sh.src;
-  sh.cv = $(k === "hop" ? "#owlHop" : "#owlIdle"); sh.cv.width = sh.cw; sh.cv.height = sh.ch;
-  sh.cv.style.transformOrigin = `${sh.footX}px ${sh.footY}px`;
-  sh.ctx = sh.cv.getContext("2d");
+// Pantheon: the mascot is swappable (themes/got.js puts a dragon here). useMascot(sheets, height, hop timings, options):
+//   sheets   {idle, hop, ...}: each clip has its own canvas, sized to its cell and pinned at its feet
+//   hop      in the hop clip: take-off, touch-down, settled (s), and the playback rate
+//   options  perchDx: stand this far behind the focused app (px, against the way it faces); perchY(i): where its feet go
+let OWL_H = 128, HOP = {}, SHEET = {}, MASCOT = {}, owlSheet;
+function useMascot(sheets, h, hop, options) {
+  const box = $("#mascot"); box.innerHTML = ""; SHEET = {}; owlSheet = null;
+  for (const k in sheets) {
+    const sh = SHEET[k] = Object.assign({ img: new Image() }, sheets[k]);
+    sh.img.src = sh.src;
+    sh.cv = document.createElement("canvas"); sh.cv.className = "owl"; sh.cv.style.visibility = "hidden";
+    sh.cv.width = sh.cw; sh.cv.height = sh.ch;
+    sh.cv.style.transformOrigin = `${sh.footX}px ${sh.footY}px`;
+    sh.ctx = sh.cv.getContext("2d");
+    box.appendChild(sh.cv);
+  }
+  OWL_H = h; HOP = hop; MASCOT = options || {};
+  try { owl.act = null; owl.hopping = false; owl.at = owl.to = app; owl.idleT = 0; } catch (e) { }   // (the first call comes before owl exists)
 }
-const perchY = i => 853 + APPS[i].dh * cells[i].s.x * (APPS[i].perch - 0.5);
-const owl = { at: app, to: app, face: 1, hopping: false, hopT: 0, idleT: 0, idleWait: 1, sx: 0, sy: 0, x: appX(app), y: 0, landed: true };
+useMascot(OWL_SHEETS, 128, { up: 0.65, down: 2.22, end: 3.0, rate: 1.7 });   // the owl: played 1.7x
+const perchY = i => MASCOT.perchY ? MASCOT.perchY(i) : 853 + APPS[i].dh * cells[i].s.x * (APPS[i].perch - 0.5);
+const perchX = i => appX(i) - owl.face * (MASCOT.perchDx || 0);
+const owl = { at: app, to: app, face: 1, hopping: false, hopT: 0, idleT: 0, idleWait: 1, sx: 0, sy: 0, x: appX(app), y: 0, landed: true, act: null };
 function hop(to, from) {
   owl.to = to; owl.sx = owl.x; owl.sy = owl.y; owl.landed = false;
   owl.face = Math.sign(appX(to) - owl.x) || owl.face;
-  owl.hopping = true; owl.hopT = from;
+  owl.hopping = true; owl.hopT = from; owl.act = null;          // (owl.act: a theme's extra clip, e.g. the dragon's fire breath)
 }
-let owlSheet;
 function drawOwl(sh, t) {
   if (owlSheet !== sh) {                                         // switching clips: show that clip's canvas
     if (owlSheet) css(owlSheet.cv, "visibility", "hidden");
@@ -455,7 +476,7 @@ function updateOwl(dt, t) {
   if (!owl.hopping) {
     if (owl.at !== app) hop(app, 0);
     else {
-      owl.x = appX(owl.at); owl.y = perchY(owl.at);
+      owl.x = perchX(owl.at); owl.y = perchY(owl.at);
       // between glances it just sits (breathing); then one slow look around
       if (owl.idleWait > 0) owl.idleWait -= dt;
       else if ((owl.idleT += dt) >= SHEET.idle.n / SHEET.idle.fps) { owl.idleT = 0; owl.idleWait = 1.5 + Math.random() * 3; }
@@ -467,11 +488,11 @@ function updateOwl(dt, t) {
     if (app !== owl.to && ht < HOP.down) {                    // changed its mind mid-air: steer to the new perch without a jump
       const u = ease(clamp((ht - HOP.up) / (HOP.down - HOP.up), 0, 1));
       owl.to = app; owl.face = Math.sign(appX(app) - owl.x) || owl.face;
-      if (u < 0.95) { owl.sx = (owl.x - appX(app) * u) / (1 - u); owl.sy = (owl.y - perchY(app) * u) / (1 - u); }
+      if (u < 0.95) { owl.sx = (owl.x - perchX(app) * u) / (1 - u); owl.sy = (owl.y - perchY(app) * u) / (1 - u); }
     }
     const u = ease(clamp((ht - HOP.up) / (HOP.down - HOP.up), 0, 1));
-    const far = Math.abs(appX(owl.to) - owl.sx) / CELL;       // a longer trip gets a higher arc
-    owl.x = owl.sx + (appX(owl.to) - owl.sx) * u;
+    const far = Math.abs(perchX(owl.to) - owl.sx) / CELL;     // a longer trip gets a higher arc
+    owl.x = owl.sx + (perchX(owl.to) - owl.sx) * u;
     owl.y = owl.sy + (perchY(owl.to) - owl.sy) * u - Math.max(0, far - 1) * 46 * Math.sin(Math.PI * u);
     if (!owl.landed && ht >= HOP.down) {
       owl.landed = true; owl.at = owl.to;
@@ -482,8 +503,9 @@ function updateOwl(dt, t) {
     else if (ht >= HOP.end) { owl.hopping = false; owl.idleT = 0; owl.idleWait = 0.8 + Math.random() * 1.5; }
   }
   if (owl.hopping || owlWarm) drawOwl(SHEET.hop, owl.hopping ? owl.hopT : 1.3);    // (owlWarm: start-up, getting the hop picture onto the GPU)
+  else if (owl.act && SHEET[owl.act.k]) drawOwl(SHEET[owl.act.k], owl.act.t);
   else drawOwl(SHEET.idle, owl.idleWait > 0 ? 0 : owl.idleT);
-  const breathe = OWL_H / (owlSheet.owlH || 150) * (owl.hopping ? 1 : 1 + 0.006 * Math.sin(t * 2.4));
+  const breathe = OWL_H / (owlSheet.owlH || owlSheet.h || 150) * (owl.hopping ? 1 : 1 + 0.006 * Math.sin(t * 2.4));
   owlSheet.cv.style.transform = `translate3d(${(owl.x - owlSheet.footX).toFixed(1)}px, ${(owl.y - owlSheet.footY).toFixed(1)}px, 0) scale(${owl.face * breathe}, ${breathe})`;
 }
 
@@ -580,6 +602,7 @@ function home(t, dt, pg) {
     dctx.drawImage(starSpr, p.x - p.r * 3, p.y - p.r * 3, p.r * 6, p.r * 6);
   }
   dctx.globalAlpha = 1;
+  if (window.sceneHome) sceneHome(t, dt);                      // Pantheon: a theme's live effects (themes/got.js)
 }
 
 function clock() {
@@ -591,7 +614,7 @@ clock(); setInterval(clock, 5000);
 
 // ================================================================ LIBRARY
 // id: the film's key in config.js's links (hp1..hp8 here, fb1..fb3 in the greenhouse)
-const FILMS = [
+const FILMS_HP = [
   { t: "Harry Potter and the Philosopher's Stone", s: "Philosopher's Stone", y: 2001, c: "#7a2a20", pages: 223, id: "hp1" },
   { t: "Harry Potter and the Chamber of Secrets",  s: "Chamber of Secrets",  y: 2002, c: "#2c5238", pages: 251, id: "hp2" },
   { t: "Harry Potter and the Prisoner of Azkaban", s: "Prisoner of Azkaban", y: 2004, c: "#2a3a62", pages: 317, id: "hp3" },
@@ -601,12 +624,16 @@ const FILMS = [
   { t: "Harry Potter and the Deathly Hallows – Part 1", s: "Deathly Hallows · I",  y: 2010, c: "#474b52", pages: 607, id: "hp7" },
   { t: "Harry Potter and the Deathly Hallows – Part 2", s: "Deathly Hallows · II", y: 2011, c: "#3a2c3e", pages: 607, id: "hp8" },
 ];
-const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII"];
+let FILMS = FILMS_HP;                                         // Pantheon: themes/got.js swaps in its seasons (setFilms)
+const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
 const W = 200, H = 300;                                     // a cover, sized to the books already in the photo
 const STAR = '<svg viewBox="0 0 24 24"><path fill="#d6b05c" d="M12 2l2.6 6.9L22 9.3l-5.8 4.6L18.2 21 12 17l-6.2 4 2-7.1L2 9.3l7.4-.4z"/></svg>';
 const row = $("#row");
 const mix = (a, b, t) => "#" + [1, 3, 5].map(k => Math.round(parseInt(a.substr(k, 2), 16) * (1 - t) + parseInt(b.substr(k, 2), 16) * t).toString(16).padStart(2, "0")).join("");
-const books = FILMS.map((f, i) => {
+let books = [];
+function buildBooks() {
+row.innerHTML = "";
+books = FILMS.map((f, i) => {
   const lc = mix(f.c, "#2a1a10", 0.38);                     // the film's colour, aged into leather
   const T = Math.round((60 + f.pages * 0.08) * 0.62);       // thicker through the series, like the real books
   const el = document.createElement("div");
@@ -622,15 +649,23 @@ const books = FILMS.map((f, i) => {
          `<div style="position:absolute;inset:0;background:linear-gradient(90deg, rgba(0,0,0,.6), rgba(255,226,180,.12) 38%, rgba(255,226,180,.05) 62%, rgba(0,0,0,.62)), linear-gradient(180deg, rgba(255,200,130,.16), rgba(0,0,0,0) 30%, rgba(0,0,0,.32)), ${lc};box-shadow:inset 0 0 6px rgba(0,0,0,.55)"></div>
           <div class="bands" style="top:14px"></div><div class="bands" style="top:44px"></div><div class="bands" style="bottom:44px"></div><div class="bands" style="bottom:14px"></div>
           <div class="roman" style="position:relative">${ROMAN[i]}</div><div class="stitle" style="position:relative">${f.s}</div><div class="star" style="position:relative">${STAR}</div>`) +
-    face("front leather", W, H, `translateZ(${T / 2}px)`, `<div style="position:absolute;inset:0;background:${lc}"></div><img src="covers/aged/${i + 1}.jpg" alt="" style="position:relative"><div class="sheen"></div>`);
+    face("front leather" + (f.caption ? " captioned" : ""), W, H, `translateZ(${T / 2}px)`, `<div style="position:absolute;inset:0;background:${lc}"></div><img src="${f.cover || `covers/aged/${i + 1}.jpg`}" alt="" style="position:relative">` +
+         (f.caption ? `<div class="cap">${esc(f.caption)}</div>` : "") + `<div class="sheen"></div>`);
   if (!TVMODE) el.addEventListener("click", () => (Math.round(focus) === i ? openFilm() : (target = i)));
   row.appendChild(el);
   return { el, T, front: el.querySelector(".front"), spine: el.querySelector(".spine"), inside: el.querySelector(".inside"),
            fshade: el.querySelector(".front .shade"), sshade: el.querySelector(".spine .shade"), sheen: el.querySelector(".sheen") };
 });
+}
+buildBooks();
 
 let target = clamp(parseFloat(hash("f") || "0"), 0, FILMS.length - 1), focus = target, vel = 0, opening = false, openT = 0;
 let landed = -1, landedAt = 0, focusX = 0;
+function setFilms(list) {                                     // Pantheon: a theme's own shelf of titles
+  FILMS = list; buildBooks();
+  target = focus = clamp(Math.round(target), 0, FILMS.length - 1); vel = 0; landed = -1;
+  if (typeof filmsText === "function") filmsText();
+}
 
 function layout(dt, now, arrive) {
   // one continuous focus value on a critically damped spring: quick, no overshoot, redirectable mid-move
@@ -859,6 +894,7 @@ addEventListener("keydown", e => {
   const k = e.key;
   if (k.startsWith("Arrow") || k === "Enter") e.preventDefault();
   if (custom.open) { customKey(k); e.preventDefault(); return; }
+  if (window.pantheonPicker && pantheonPicker.open) { pantheonPicker.key(k); e.preventDefault(); return; }
   if (opening) return;
   if (section === 0 && gearOn) {
     if (k === "Enter" || k === " ") TOP[topSel].go();
@@ -878,7 +914,7 @@ addEventListener("keydown", e => {
     if (k === "ArrowRight") target = Math.min(FILMS.length - 1, Math.round(target) + 1);
     else if (k === "ArrowLeft") target = Math.max(0, Math.round(target) - 1);
     else if (k === "ArrowUp" || k === "Escape" || k === "Backspace") section = 0;
-    else if (k === "ArrowDown") section = 2;
+    else if (k === "ArrowDown" && !document.body.dataset.nogarden) section = 2;
     else if (k === "Enter" || k === " ") openFilm();
     else return;
   } else {
@@ -891,6 +927,7 @@ addEventListener("keydown", e => {
   e.preventDefault();
 });
 window.tvBack = () => {
+  if (window.pantheonPicker && pantheonPicker.open) { pantheonPicker.close(); return true; }
   if (custom.open) { closeCustom(); return true; }
   if (gearOn) { setGear(false); return true; }
   if (opening) return true; if (section > 0) { section--; return true; } return false;
@@ -904,6 +941,7 @@ window.tvHome = () => { if (custom.open) closeCustom(); setGear(false); section 
 const TOP = [
   { id: "#wifi",  tip: "Wi-Fi",       go: () => tvSettings("wifi") },
   { id: "#tvset", tip: "TV settings", go: () => tvSettings("all") },
+  { id: "#themesIcon", tip: "Themes",  go: () => window.pantheonPicker && pantheonPicker.show() },
   { id: "#mic",   tip: "Ask",         go: () => pantheonListen() },
   { id: "#gear",  tip: "Customise",   go: () => openCustom() },
 ];
