@@ -31,8 +31,18 @@ your own machine for a personal build.
 The throne room (`img/got/throne.jpg`), the library shelf (`img/got/shelf.jpg`), the eight season covers
 (`img/got/covers/`), the dragon (`dragon/`) and its fire breath were generated with AI image and video models for
 this project (via Sume: GPT Image 2.5 and Seedance 2.5) from original descriptions. No HBO artwork, stills or posters
-were used. They're included in this repository under the same MIT licence as the code. They depict an unofficial
+were used. The same goes for the room by day, at golden hour and under cloud (`img/got/throne_{day,golden,overcast}.jpg`),
+the cloud panoramas (`img/got/clouds_*.webp`), the torch flame and its crackle (`img/got/torch.webp`,
+`sounds/got/fire.mp3`), and the score (`sounds/got/music.mp3`, an original track made with Sume Music 1.0; not the
+show's theme). They're included in this repository under the same MIT licence as the code. They depict an unofficial
 fan theme; the names and the world they evoke belong to their owners (below).
+
+## Weather and astronomy
+
+- Weather data from [Open-Meteo](https://open-meteo.com), under CC BY 4.0. The TV's rough location comes from
+  [ipapi.co](https://ipapi.co), or [ipwho.is](https://ipwho.is) as a fallback.
+- The sun and moon positions and the moon's phase (`themes/weather.js`) follow the formulas of
+  [SunCalc](https://github.com/mourner/suncalc) by Vladimir Agafonkin (BSD 2-Clause), re-derived for this project.
 
 ## Fonts
 

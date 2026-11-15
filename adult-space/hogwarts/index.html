@@ -239,6 +239,7 @@
       <svg id="wifi" viewBox="0 0 24 24" fill="none" stroke="#f4ead6" stroke-width="1.6" stroke-linecap="round"><path d="M2.5 9a14 14 0 0 1 19 0M5.5 12.5a9.5 9.5 0 0 1 13 0M8.6 15.8a5 5 0 0 1 6.8 0"/><circle cx="12" cy="19" r="1" fill="#f4ead6"/></svg>
       <svg id="tvset" viewBox="0 0 24 24" fill="none" stroke="#f4ead6" stroke-width="1.6" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>
       <svg id="themesIcon" viewBox="0 0 24 24" fill="none" stroke="#f4ead6" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><path d="M3.5 18.5h17M4.5 16l-1.5-9 5 4 4-6.5 4 6.5 5-4-1.5 9z"/></svg>
+      <svg id="soundIcon" viewBox="0 0 24 24" fill="none" stroke="#f4ead6" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path class="wave" d="M15.5 9a4.5 4.5 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/><path class="slash" d="M15.5 9.5l5 5M20.5 9.5l-5 5"/></svg>
       <svg id="mic" viewBox="0 0 24 24" fill="none" stroke="#f4ead6" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="11.5" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5v4M8.5 21.5h7"/></svg>
       <svg id="gear" viewBox="0 0 24 24" fill="none" stroke="#f4ead6" stroke-width="1.6" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2.8l1.6 2.2 2.7-.6.6 2.7 2.4 1.3-1 2.6 1 2.6-2.4 1.3-.6 2.7-2.7-.6L12 21.2l-1.6-2.2-2.7.6-.6-2.7-2.4-1.3 1-2.6-1-2.6 2.4-1.3.6-2.7 2.7.6z"/></svg>
     </div>
@@ -314,6 +315,8 @@
 <script src="owl/owl.js"></script>
 <script src="dragon/dragon.js"></script>
 <script src="dragon/fire.js"></script>
+<script src="img/got/torch.js"></script>
+<script src="themes/weather.js"></script>
 <script src="themes/got.js"></script>
 <script src="themes/theme.js"></script>
 <script>
@@ -899,8 +902,11 @@ addEventListener("keydown", e => {
   if (opening) return;
   if (section === 0 && gearOn) {
     if (k === "Enter" || k === " ") TOP[topSel].go();
-    else if (k === "ArrowLeft") { topSel = Math.max(0, topSel - 1); setGear(true); }             // the row stops at its ends
-    else if (k === "ArrowRight") { topSel = Math.min(TOP.length - 1, topSel + 1); setGear(true); }
+    else if (k === "ArrowLeft" || k === "ArrowRight") {                                  // the row stops at its ends; skips hidden icons
+      const d = k === "ArrowLeft" ? -1 : 1; let i = topSel + d;
+      while (i >= 0 && i < TOP.length && !$(TOP[i].id).getBoundingClientRect().width) i += d;
+      if (i >= 0 && i < TOP.length) topSel = i; setGear(true);
+    }
     else if (k === "Escape" || k === "Backspace") setGear(false);
     else if (k.startsWith("Arrow") && k !== "ArrowUp") setGear(false);
     else return;
@@ -943,6 +949,7 @@ const TOP = [
   { id: "#wifi",  tip: "Wi-Fi",       go: () => tvSettings("wifi") },
   { id: "#tvset", tip: "TV settings", go: () => tvSettings("all") },
   { id: "#themesIcon", tip: "Themes",  go: () => window.pantheonPicker && pantheonPicker.show() },
+  { id: "#soundIcon",  tip: "Sound",   go: () => { if (window.pantheonAudio) $("#gearTip").textContent = pantheonAudio.toggle() ? "Sound on" : "Muted"; } },
   { id: "#mic",   tip: "Ask",         go: () => pantheonListen() },
   { id: "#gear",  tip: "Customise",   go: () => openCustom() },
 ];

@@ -14,7 +14,7 @@
 
   // the torch flames in img/got/throne.jpg, in the photo's 1935 x 1080 frame (measured from the picture): x, y of
   // the flame's base, and its height
-  const SCONCES = [{ x: 1760, y: 334, h: 112 }, { x: 166, y: 338, h: 112 }, { x: 390, y: 461, h: 80 }, { x: 1535, y: 466, h: 80 }];
+  const SCONCES = [{ x: 1760, y: 334, h: 112 }, { x: 182, y: 338, h: 112 }, { x: 390, y: 461, h: 80 }, { x: 1535, y: 466, h: 80 }];
 
   const SEASONS = [   // [year, episodes, leather colour, what happens (four words at most)]
     [2011, 10, "#5c1c16", "Ned Stark loses everything"], [2012, 10, "#2a3644", "Battle of the Blackwater"], [2013, 10, "#4a2a1a", "The Red Wedding"],
@@ -23,7 +23,9 @@
   const WORDS = ["One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight"];
 
   let on = false, ready = false, sconces = [], fire = [], roast = {}, landedOn = -1, settled = 0, nextBreath = 0, sprites = null, covers = null;
-  let jet = null, sconceDt = 0;
+  let jet = null, sconceDt = 0, sky = null, room = null;
+  // the glass of the three windows, in the photo's 1935 x 1080 frame (tools/got_windows.py) and its mask
+  const GLASS = { x: 613.2, y: 7.6, w: 702.0, h: 499.8, mask: "img/got/glass.png" };
   const ICON_Y = 853;                                           // the dock icons' middle (index.html: perchY, dsp)                                // jet: the fire-breath canvas (makeJet)
 
   // ---------------------------------------------------------------- the library: season books
@@ -82,44 +84,340 @@
     };
   }
 
-  // ---------------------------------------------------------------- the torch sconces: a small canvas on each, in the photo
+  // ---------------------------------------------------------------- the torch sconces: real flame footage (tools/got_torch.py)
+  // Each sconce has a small canvas in the photo, playing the flame loop from its own starting point and at its own
+  // speed, over a soft flickering glow on the stone. The darker the room, the brighter the torches look.
   function makeSconces() {
-    const box = document.querySelector("#home .photoBox");
-    return SCONCES.map(s => {
-      const w = Math.round(s.h * 1.3), h = Math.round(s.h * 2.1);
+    const box = document.querySelector("#home .photoBox"), T = window.TORCH_SHEET;
+    const img = T ? Object.assign(new Image(), { src: T.src }) : null;
+    return SCONCES.map((s, i) => {
+      const w = Math.round(s.h * 1.5), h = Math.round(s.h * 2.0);
       const cv = document.createElement("canvas"); cv.className = "sconce";
-      cv.width = Math.round(w / 2); cv.height = Math.round(h / 2);             // half resolution: flames are soft anyway
-      Object.assign(cv.style, { position: "absolute", left: (s.x - w / 2) + "px", top: (s.y - h * 0.82) + "px",
-                                width: w + "px", height: h + "px", pointerEvents: "none", mixBlendMode: TVMODE ? "normal" : "screen" });
+      cv.width = Math.round(w * .75); cv.height = Math.round(h * .75);
+      Object.assign(cv.style, { position: "absolute", left: (s.x - w / 2) + "px", top: (s.y - h * 0.86) + "px",
+                                width: w + "px", height: h + "px", pointerEvents: "none" });
       box.appendChild(cv);
-      return { s, cv, g: cv.getContext("2d"), w, h, ps: [], seed: Math.random() * 10 };
+      return { s, cv, g: cv.getContext("2d"), w, h, img, T, phase: i * 9.7 + Math.random() * 3, rate: .9 + Math.random() * .25, seed: Math.random() * 10 };
     });
   }
   function drawSconces(t, dt) {
-    if (TVMODE) { sconceDt += dt; if (!everyOther) return; dt = sconceDt; sconceDt = 0; }   // 30 fps on the TV: plenty for flicker
+    if (TVMODE) { sconceDt += dt; if (!everyOther) return; dt = sconceDt; sconceDt = 0; }   // 30 fps on the TV
+    const dark = sky && sky.wx ? sky.wx.light.dark : 1, bright = .55 + .45 * dark;
     for (const sc of sconces) {
-      const { g, w, h, s } = sc, k = 0.5;                                      // drawing at half resolution
-      const flick = 0.75 + 0.25 * Math.sin(t * 9.3 + sc.seed) * Math.sin(t * 3.7 + sc.seed * 2) + 0.08 * Math.sin(t * 23 + sc.seed);
-      for (let n = dt * 46; n > 0; n--) {
-        if (n < 1 && Math.random() > n) break;
-        sc.ps.push({ x: w / 2 + (Math.random() - .5) * s.h * .28, y: h * .82, vx: (Math.random() - .5) * 18, vy: -(55 + Math.random() * 75) * s.h / 100,
-                     life: .35 + Math.random() * .4, age: 0, r: (.16 + Math.random() * .14) * s.h });
+      const { g, s, cv } = sc, k = cv.width / sc.w;
+      const flick = .82 + .18 * Math.sin(t * 9.3 + sc.seed) * Math.sin(t * 3.7 + sc.seed * 2);
+      g.setTransform(k, 0, 0, k, 0, 0); g.clearRect(0, 0, sc.w, sc.h);
+      g.globalAlpha = .5 * flick * bright; g.globalCompositeOperation = "lighter";
+      g.drawImage(sprites.glow, sc.w / 2 - s.h * .7, sc.h * .86 - s.h * 1.05, s.h * 1.4, s.h * 1.4);
+      g.globalCompositeOperation = "source-over";
+      if (sc.img && sc.img.complete && sc.img.naturalWidth) {
+        const T = sc.T, f = Math.floor((t * sc.rate + sc.phase) * T.fps) % T.n, [fx, fy] = T.frames[f];
+        const fh = s.h * 1.18, fw = fh * T.w / T.h;
+        g.globalAlpha = Math.min(1, .7 + .3 * flick) * (.75 + .25 * dark);
+        g.drawImage(sc.img, fx, fy, T.w, T.h, sc.w / 2 - fw / 2, sc.h * .86 - fh, fw, fh);
       }
-      g.setTransform(k, 0, 0, k, 0, 0);
-      g.globalCompositeOperation = "source-over"; g.clearRect(0, 0, w, h);
-      g.globalCompositeOperation = "lighter";
-      g.globalAlpha = .55 * flick; g.drawImage(sprites.glow, w / 2 - s.h * .65, h * .82 - s.h * .95, s.h * 1.3, s.h * 1.3);
-      sc.ps = sc.ps.filter(p => (p.age += dt) < p.life);
-      for (const p of sc.ps) {
-        const u = p.age / p.life;
-        p.x += (p.vx + Math.sin((t + p.r) * 7) * 14) * dt; p.y += p.vy * dt; p.vx *= .97;
-        const r = p.r * (1 - u * .65);
-        g.globalAlpha = (1 - u) * .8 * flick;
-        g.drawImage(u < .35 ? sprites.hot : sprites.flame, p.x - r, p.y - r, r * 2, r * 2);
-      }
-      if (Math.random() < dt * 3) sc.ps.push({ x: w / 2, y: h * .7, vx: (Math.random() - .5) * 40, vy: -120, life: .8, age: 0, r: 2.5 });   // a spark
     }
   }
+
+  // ---------------------------------------------------------------- the sky through the windows (themes/weather.js)
+  // One small canvas over the glass (half resolution: the sky is soft anyway), redrawn ~30 times a second: the sky's
+  // colour for the time of day, stars, the sun's glow and the moon (its real position and phase), two layers of clouds
+  // drifting with the wind, rain or snow outside, lightning. The glass mask keeps the stone tracery and the throne in front.
+  const SKY = {   // colours of the sky's top and bottom for each kind of light
+    night: ["#060b18", "#14223e"], dawn: ["#2a3358", "#d98a6a"], golden: ["#3d5a8c", "#f2a65a"], day: ["#4f86c6", "#bcd6ee"] };
+  const mixc = (a, b, t) => { const p = x => x[0] === "#" ? [1, 3, 5].map(k => parseInt(x.substr(k, 2), 16)) : x.match(/\d+/g).map(Number);
+                               const A = p(a), B = p(b);
+                               return `rgb(${A.map((v, i) => Math.round(v + (B[i] - v) * t)).join(",")})`; };
+  function noiseTile(w, h, seed) {             // tileable cloud texture (value-noise fbm), alpha only: made once
+    const c = document.createElement("canvas"); c.width = w; c.height = h;
+    const g = c.getContext("2d"), im = g.createImageData(w, h);
+    let s = seed; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+    const grids = [4, 8, 16, 32].map(n => { const a = []; for (let i = 0; i < n * (n >> 1 || 1); i++) a.push(rnd()); return { n, m: n >> 1 || 1, a }; });
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      let v = 0, amp = .55;
+      for (const G of grids) {
+        const fx = x / w * G.n, fy = y / h * G.m, ix = Math.floor(fx), iy = Math.floor(fy), tx = fx - ix, ty = fy - iy;
+        const at = (i, j) => G.a[((j % G.m + G.m) % G.m) * G.n + ((i % G.n) + G.n) % G.n];
+        const sx = tx * tx * (3 - 2 * tx), sy = ty * ty * (3 - 2 * ty);
+        v += amp * ((at(ix, iy) * (1 - sx) + at(ix + 1, iy) * sx) * (1 - sy) + (at(ix, iy + 1) * (1 - sx) + at(ix + 1, iy + 1) * sx) * sy);
+        amp *= .5;
+      }
+      im.data[(y * w + x) * 4 + 3] = Math.round(Math.min(1, v) * 255);
+    }
+    g.putImageData(im, 0, 0); return c;
+  }
+  function makeSky() {
+    const box = document.querySelector("#home .photoBox"), K = 0.5;
+    const cv = document.createElement("canvas"); cv.className = "gotsky";
+    cv.width = Math.round(GLASS.w * K); cv.height = Math.round(GLASS.h * K);
+    Object.assign(cv.style, { position: "absolute", left: GLASS.x + "px", top: GLASS.y + "px", width: GLASS.w + "px", height: GLASS.h + "px", pointerEvents: "none" });
+    box.insertBefore(cv, box.children[1] || null);                       // over the photo, under the mist
+    const flash = document.createElement("div"); flash.className = "gotflash";
+    Object.assign(flash.style, { position: "absolute", inset: "0", pointerEvents: "none", background: "#cfe0ff", opacity: "0" });
+    box.appendChild(flash);
+    const mask = new Image(); mask.src = GLASS.mask;
+    const stars = Array.from({ length: 70 }, () => ({ x: Math.random(), y: Math.random() * .8, r: .5 + Math.random() * .9, p: Math.random() * 6 }));
+    const c1 = Object.assign(new Image(), { src: "img/got/clouds_wispy.webp" }), c2 = Object.assign(new Image(), { src: "img/got/clouds_puffy.webp" });
+    return { cv, g: cv.getContext("2d"), K, flash, mask, stars, c1, c2,
+             drops: [], bolt: null, nextBolt: 0, flashT: 0, tint: null, tintKey: "", acc: 0, wx: null, wxAt: 0 };
+  }
+  // where the sun or moon is in the windows: the windows face south, so east is left; 0° high is the glass's bottom
+  // the sun and moon mostly cross the middle window, above the throne (its spikes reach ~42% down the glass); far
+  // east or west they move into the side windows. Their height: from just above the spikes (0°) to the window tops.
+  const skyX = (az, w) => {
+    const a = Math.max(-110, Math.min(110, az));
+    if (Math.abs(a) <= 60) return w * (0.5 + a / 60 * 0.085);
+    const side = (Math.abs(a) - 60) / 50;                                  // 0..1 across a side window
+    return w * (a > 0 ? 0.83 + side * 0.14 : 0.17 - side * 0.14);
+  };
+  const skyY = (alt, h) => h * (0.40 - Math.max(-6, Math.min(alt, 70)) / 70 * 0.33);
+  function drawMoon(g, x, y, R, m) {
+    const s = m.waxing ? -1 : 1, k = 2 * m.frac - 1;                    // the dark limb's side; -1 new .. 1 full
+    const glow = g.createRadialGradient(x, y, R * .8, x, y, R * 4);
+    glow.addColorStop(0, `rgba(210,225,255,${.35 * m.frac})`); glow.addColorStop(1, "rgba(210,225,255,0)");
+    g.fillStyle = glow; g.fillRect(x - R * 4, y - R * 4, R * 8, R * 8);
+    g.fillStyle = "#e9eef7"; g.beginPath(); g.arc(x, y, R, 0, 7); g.fill();
+    g.fillStyle = "rgba(28,36,58,.93)"; g.beginPath();                     // the shadowed part
+    g.arc(x, y, R + .3, -Math.PI / 2, Math.PI / 2, s < 0);
+    g.ellipse(x, y, Math.abs(k) * R, R + .3, 0, Math.PI / 2, -Math.PI / 2, (k > 0) !== (s < 0));
+    g.fill();
+  }
+  function cloudTint(sk, w, light) {           // the cloud panoramas coloured for the light and weather now (redone when they change)
+    if (!sk.c1.complete || !sk.c1.naturalWidth || !sk.c2.complete || !sk.c2.naturalWidth) return null;
+    const key = `${w.kind}|${light.night.toFixed(1)}|${light.day.toFixed(1)}|${light.golden.toFixed(1)}|${light.dawn.toFixed(1)}`;
+    if (sk.tintKey === key) return sk.tint;
+    const storm = /thunder|heavyrain|blizzard/.test(w.kind) ? 1 : /rain|snow|overcast|drizzle/.test(w.kind) ? .45 : 0;
+    let col = mixc(mixc(mixc("#5a6886", "#e4e8ef", light.day), "#ffb27a", light.golden * .85), "#c8909a", light.dawn * .7);
+    col = mixc(col, light.day > .5 ? "#7d838e" : "#2b3140", storm);
+    const out = [sk.c1, sk.c2].map(src => {
+      const W = 512, H = Math.round(512 * src.naturalHeight / src.naturalWidth);
+      const c = document.createElement("canvas"); c.width = W; c.height = H;
+      const g = c.getContext("2d");
+      g.drawImage(src, 0, 0, W, H);
+      g.globalCompositeOperation = "multiply"; g.fillStyle = col; g.fillRect(0, 0, W, H);          // tint, keeping the shading
+      g.globalCompositeOperation = "destination-in"; g.drawImage(src, 0, 0, W, H);                // and the cloud's own shape
+      return c;
+    });
+    sk.tint = out; sk.tintKey = key; return out;
+  }
+  function bolt(w, h) {                        // a lightning bolt: midpoint displacement, with a branch
+    const pts = [[w * (.25 + Math.random() * .5), -5], [w * (.2 + Math.random() * .6), h * (.75 + Math.random() * .2)]];
+    for (let pass = 0; pass < 5; pass++) for (let i = pts.length - 1; i > 0; i--) {
+      const [ax, ay] = pts[i - 1], [bx, by] = pts[i], o = (Math.hypot(bx - ax, by - ay)) * .25;
+      pts.splice(i, 0, [(ax + bx) / 2 + (Math.random() - .5) * o, (ay + by) / 2 + (Math.random() - .5) * o * .3]);
+    }
+    return pts;
+  }
+  function drawSky(t, dt) {
+    const sk = sky; if (!sk) return;
+    sk.acc += dt; if (TVMODE && !everyOther) return; const step = sk.acc; sk.acc = 0;
+    if (!sk.wx || t - sk.wxAt > 2) { sk.wx = PANTHEON_WX.now(); sk.wxAt = t; }   // the weather, re-read every 2 s
+    const w = sk.wx, L = w.light, g = sk.g, W = sk.cv.width, H = sk.cv.height;
+    // sky colour
+    const top = mixc(mixc(mixc(SKY.night[0], SKY.dawn[0], L.dawn), SKY.golden[0], L.golden), SKY.day[0], L.day);
+    const bot = mixc(mixc(mixc(SKY.night[1], SKY.dawn[1], L.dawn), SKY.golden[1], L.golden), SKY.day[1], L.day);
+    const storm = /thunder|heavyrain|blizzard/.test(w.kind) ? .55 : w.kind === "overcast" || w.kind === "rain" || w.kind === "snow" ? .3 : 0;
+    const grad = g.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, mixc(top, "#1a1e26", storm));
+    grad.addColorStop(1, mixc(bot, "#2a2f38", storm));
+    g.globalCompositeOperation = "source-over"; g.globalAlpha = 1; g.fillStyle = grad; g.fillRect(0, 0, W, H);
+    // stars, on clear-ish nights
+    const starA = L.night * (1 - w.cloud) * (1 - w.fog);
+    if (starA > .02) for (const st of sk.stars) { g.globalAlpha = starA * (.55 + .45 * Math.sin(t * 2 + st.p)); g.fillStyle = "#fff"; g.fillRect(st.x * W, st.y * H, st.r, st.r); }
+    // the sun's glow and the moon
+    if (w.sun.alt > -4) {
+      const sx = skyX(w.sun.az, W), sy = skyY(w.sun.alt, H), a = Math.max(0, 1 - w.cloud * .8) * (L.day + L.golden + L.dawn * .6);
+      const sg = g.createRadialGradient(sx, sy, 2, sx, sy, H * .6);
+      sg.addColorStop(0, `rgba(255,${L.golden > .3 ? 210 : 245},${L.golden > .3 ? 150 : 225},${.9 * a})`); sg.addColorStop(1, "rgba(255,230,200,0)");
+      g.globalAlpha = 1; g.fillStyle = sg; g.fillRect(0, 0, W, H);
+    }
+    if (w.moon.alt > -3 && L.day < .8) { g.globalAlpha = (1 - L.day) * (1 - .6 * w.fog); drawMoon(g, skyX(w.moon.az, W), skyY(w.moon.alt, H), H * .045, w.moon); }
+    // clouds: two layers drifting with the wind (and a little even on a calm day)
+    const tinted = cloudTint(sk, w, L), speed = 2 + w.wind * .3;
+    if (tinted && w.cloud > .03) {
+      const [k1, k2] = tinted;
+      sk.o1 = ((sk.o1 || 0) + step * speed) % k1.width; sk.o2 = ((sk.o2 || 0) + step * speed * 1.6) % k2.width;
+      const layer = (img, off, y, hgt, a) => { g.globalAlpha = a; const sw = img.width * (hgt / img.height);
+        for (let x = -((off / img.width) * sw); x < W; x += sw) g.drawImage(img, x, y, sw, hgt); };
+      const cov = w.cloud;
+      layer(k1, sk.o1, -H * .02, H * .62, Math.min(1, .25 + cov * .9));                       // high, wind-torn veils
+      if (cov > .3) layer(k2, sk.o2, H * (.28 - cov * .1), H * (.32 + cov * .25), Math.min(1, (cov - .3) * 1.6));   // lower, heavier masses
+      if (cov > .8) { g.globalAlpha = (cov - .8) * 3; g.fillStyle = mixc(L.day > .5 ? "#9aa1ab" : "#262b36", "#1b1e25", storm); g.fillRect(0, 0, W, H); }   // a full overcast
+    }
+    // rain or snow, outside the glass
+    const want = Math.round(w.rain * 140 + w.snow * 170);
+    while (sk.drops.length < want) sk.drops.push({ x: Math.random() * W, y: Math.random() * H, v: 0.6 + Math.random() * .6, ph: Math.random() * 6 });
+    if (sk.drops.length > want) sk.drops.length = want;
+    if (want) {
+      const slant = Math.min(1.2, w.wind / 40), snow = w.snow > w.rain;
+      g.globalAlpha = snow ? .9 : .45; g.strokeStyle = g.fillStyle = L.day > .5 ? "#eef3fa" : "#b9c8e2"; g.lineWidth = .8;
+      g.beginPath();
+      for (const p of sk.drops) {
+        if (snow) { p.y += step * (14 + 26 * p.v) * (w.kind === "blizzard" ? 2.4 : 1); p.x += step * (Math.sin(t + p.ph) * 6 + slant * 40 * (w.kind === "blizzard" ? 2 : 1)); }
+        else { p.y += step * (170 + 90 * p.v); p.x += step * slant * 90; }
+        if (p.y > H) { p.y -= H + 10; p.x = Math.random() * W; } if (p.x > W) p.x -= W; if (p.x < 0) p.x += W;
+        if (snow) g.rect(p.x, p.y, 1.3 * p.v + .5, 1.3 * p.v + .5); else { g.moveTo(p.x, p.y); g.lineTo(p.x - slant * 5, p.y - 9); }
+      }
+      if (snow) g.fill(); else g.stroke();
+    }
+    // fog: the far side goes milky
+    if (w.fog > .02) { g.globalAlpha = .75 * w.fog; g.fillStyle = L.day > .5 ? "#c4c9cf" : "#2c3340"; g.fillRect(0, 0, W, H); }
+    // lightning, in a thunderstorm: a bolt in the windows, the hall lit for a moment, thunder a little later
+    if (w.kind === "thunder") {
+      if (!sk.nextBolt) sk.nextBolt = t + 3 + Math.random() * 6;
+      if (t > sk.nextBolt) { sk.bolt = { pts: bolt(W, H), t0: t }; sk.flashT = t; sk.nextBolt = t + 6 + Math.random() * 14;
+                             if (window.pantheonAudio) setTimeout(() => pantheonAudio.thunder(), 700 + Math.random() * 2200); }
+    } else sk.nextBolt = 0;
+    if (sk.bolt) {
+      const age = t - sk.bolt.t0;
+      if (age > .45) sk.bolt = null;
+      else if (age < .1 || (age > .18 && age < .28)) {
+        g.globalAlpha = .35; g.fillStyle = "#dfe8ff"; g.fillRect(0, 0, W, H);
+        g.globalAlpha = 1; g.strokeStyle = "#f4f7ff"; g.lineWidth = 1.6; g.shadowColor = "#a9c3ff"; g.shadowBlur = 8;
+        g.beginPath(); sk.bolt.pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.stroke(); g.shadowBlur = 0;
+      }
+    }
+    const fa = sk.flashT ? Math.max(0, 1 - (t - sk.flashT) / .7) : 0;
+    css(sk.flash, "opacity", (fa * (fa > .7 || (fa > .35 && fa < .55) ? .32 : .12)).toFixed(3));
+    // only the glass
+    if (sk.mask.complete && sk.mask.naturalWidth) { g.globalAlpha = 1; g.globalCompositeOperation = "destination-in"; g.drawImage(sk.mask, 0, 0, W, H); }
+    g.globalCompositeOperation = "source-over"; g.globalAlpha = 1;
+  }
+
+  // ---------------------------------------------------------------- the room itself: its light follows the sun and weather
+  // Four versions of the same room (night = the theme's picture; overcast, sunny day and golden hour, made to line up
+  // with it) are stacked in the photo and blended by the sun's height and the cloud: layer k's opacity is
+  // w_k / (w_0 + ... + w_k), so stacking them gives exactly the weighted mix. The blend eases slowly (no sudden
+  // changes). A storm shades the hall; fog drifts across the floor; on sunny days light shafts slant with the sun.
+  const ROOM = [["overcast", "img/got/throne_overcast.jpg"], ["golden", "img/got/throne_golden.jpg"], ["day", "img/got/throne_day.jpg"]];
+  function makeRoom() {
+    const box = document.querySelector("#home .photoBox"), base = box.querySelector("img");
+    const layers = ROOM.map(([k, src]) => {
+      const im = new Image(); im.src = src; im.className = "gotroom";
+      Object.assign(im.style, { position: "absolute", left: "0", top: "0", width: "100%", height: "100%", opacity: "0", pointerEvents: "none" });
+      base.after(im); return { k, im, a: 0 };
+    }).reverse();                                                          // (after() inserts in reverse: now overcast, golden, day)
+    layers.sort((x, y) => ROOM.findIndex(r => r[0] === x.k) - ROOM.findIndex(r => r[0] === y.k));
+    let last = base; layers.forEach(l => { last.after(l.im); last = l.im; });
+    const shade = document.createElement("div"); shade.className = "gotshade";
+    Object.assign(shade.style, { position: "absolute", inset: "0", background: "#05070c", opacity: "0", pointerEvents: "none" });
+    last.after(shade);
+    // fog: two soft bands drifting across the floor and the steps (moved by CSS transforms: cheap on the TV)
+    const fog = [0, 1].map(i => {
+      const tile = noiseTile(256, 48, 13 + i * 31), c = document.createElement("canvas"); c.width = 1024; c.height = 140;
+      const g = c.getContext("2d"); g.filter = "blur(6px)";
+      g.drawImage(tile, 0, 0, 512, 140); g.drawImage(tile, 512, 0, 512, 140);
+      g.filter = "none"; g.globalCompositeOperation = "source-in"; g.fillStyle = "#cfd6e0"; g.fillRect(0, 0, 1024, 140);
+      g.globalCompositeOperation = "destination-in";                                            // soft top and bottom
+      const v = g.createLinearGradient(0, 0, 0, 140); v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(.45, "rgba(0,0,0,1)"); v.addColorStop(1, "rgba(0,0,0,0)");
+      g.fillStyle = v; g.fillRect(0, 0, 1024, 140);
+      const wrap = document.createElement("div");
+      Object.assign(wrap.style, { position: "absolute", left: "0", top: (i ? 590 : 470) + "px", width: "3870px", height: (i ? 300 : 230) + "px",
+                                  pointerEvents: "none", willChange: "transform", opacity: "0",
+                                  backgroundImage: `url(${c.toDataURL()})`, backgroundSize: `1935px 100%`, backgroundRepeat: "repeat-x" });
+      shade.after(wrap); return { el: wrap, x: Math.random() * 1935, v: i ? 9 : 5 };
+    });
+    // light shafts: a few long soft beams from the windows, angled by the sun (redrawn only when the sun moves)
+    const rays = document.createElement("canvas"); rays.width = 480; rays.height = 270; rays.className = "gotrays";
+    Object.assign(rays.style, { position: "absolute", left: "0", top: "0", width: "100%", height: "100%", opacity: "0", pointerEvents: "none" });
+    fog[1].el.after(rays);
+    return { layers, shade, fog, rays, rg: rays.getContext("2d"), rayAz: 999 };
+  }
+  function drawRoom(t, dt) {
+    const R = room, w = sky && sky.wx; if (!R || !w) return;
+    const L = w.light, cloudy = Math.min(1, Math.max(0, (w.cloud - .45) / .4));
+    const storm = /thunder|heavyrain|blizzard/.test(w.kind) ? 1 : /rain|snow/.test(w.kind) ? .5 : 0;
+    const wt = { night: L.night + L.dawn * .45, overcast: (L.day + L.golden + L.dawn * .55) * cloudy, golden: (L.golden + L.dawn * .55) * (1 - cloudy), day: L.day * (1 - cloudy) };
+    let cum = wt.night;
+    for (const l of R.layers) {
+      cum += wt[l.k]; const target = cum > 1e-6 ? wt[l.k] / cum : 0;
+      l.a += (target - l.a) * Math.min(1, dt / 3);                         // eases over a few seconds
+      css(l.im, "opacity", l.a.toFixed(3)); css(l.im, "visibility", l.a > .003 ? "visible" : "hidden");
+    }
+    R.storm = (R.storm || 0) + (storm * (.18 + .1 * L.night) - (R.storm || 0)) * Math.min(1, dt / 3);
+    css(R.shade, "opacity", R.storm.toFixed(3));
+    const fogA = Math.min(.55, .16 + w.fog * .4 + storm * .06) * (L.day > .5 ? .8 : 1);
+    R.fog.forEach(f => { f.x = (f.x + dt * f.v * (1 + w.wind / 30)) % 1935;
+                         f.el.style.transform = `translate3d(${(-f.x).toFixed(1)}px,0,0)`; css(f.el, "opacity", fogA.toFixed(3)); });
+    // shafts: only with the sun up and the sky not overcast
+    const sunny = (L.day + L.golden) * (1 - cloudy) * Math.max(0, Math.min(1, w.sun.alt / 6));
+    css(R.rays, "opacity", (sunny * (.55 + .1 * Math.sin(t * .4))).toFixed(3));
+    if (sunny > .02 && Math.abs(w.sun.az - R.rayAz) > 1) {
+      R.rayAz = w.sun.az; const g = R.rg, W = 480, H = 270;
+      g.clearRect(0, 0, W, H); g.globalCompositeOperation = "lighter";
+      const lean = Math.max(-1, Math.min(1, w.sun.az / 60)), drop = Math.max(.2, 1 - w.sun.alt / 60);   // sun in the west: beams lean east (left)
+      const warm = L.golden > L.day ? "255,176,92" : "255,236,200";
+      for (const [wx, ww] of [[GLASS.x + GLASS.w * .09, GLASS.w * .1], [GLASS.x + GLASS.w * .5, GLASS.w * .16], [GLASS.x + GLASS.w * .91, GLASS.w * .1]]) {
+        const x0 = wx / 1935 * W, y0 = (GLASS.y + GLASS.h * .35) / 1080 * H, x1 = x0 - lean * W * .32 * drop, y1 = H * (.72 + .2 * drop), ww2 = ww / 1935 * W;
+        const gr = g.createLinearGradient(x0, y0, x1, y1); gr.addColorStop(0, `rgba(${warm},.22)`); gr.addColorStop(1, `rgba(${warm},0)`);
+        g.fillStyle = gr; g.beginPath(); g.moveTo(x0 - ww2 / 2, y0); g.lineTo(x0 + ww2 / 2, y0); g.lineTo(x1 + ww2 * 1.6, y1); g.lineTo(x1 - ww2 * 1.6, y1); g.fill();
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------- sound: the fire, the music, and the weather outside
+  // Fire crackle (sounds/got/fire.mp3, from the torch footage) and music (sounds/got/music-local.mp3 if you put your
+  // own there, else the original sounds/got/music.mp3). Rain, wind and thunder are synthesised to fit the weather
+  // (Web Audio: filtered noise), so they never loop audibly. Quiet by default; muted from the top row; silent
+  // whenever an app is open (the TV app calls pause/resume).
+  const VOL = { fire: .36, music: .14, rain: .22, wind: .2, thunder: .55 };
+  const audio = { on: false, muted: (() => { try { return localStorage.getItem("pantheon_mute") === "1"; } catch (e) { return false; } })(), paused: false };
+  function startAudio() {
+    if (audio.fire) return;
+    audio.fire = Object.assign(new Audio("sounds/got/fire.mp3"), { loop: true, volume: 0 });
+    audio.music = Object.assign(new Audio("sounds/got/music-local.mp3"), { loop: true, volume: 0 });
+    audio.music.onerror = () => { audio.music.onerror = null; audio.music.src = "sounds/got/music.mp3"; if (audio.on && !audio.paused) audio.music.play().catch(() => { }); };
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext, ac = audio.ac = new AC();
+      const n = ac.createBuffer(1, ac.sampleRate * 3, ac.sampleRate), d = n.getChannelData(0);
+      let b0 = 0, b1 = 0, b2 = 0;                                                    // pink-ish noise
+      for (let i = 0; i < d.length; i++) { const w = Math.random() * 2 - 1; b0 = .99765 * b0 + w * .099; b1 = .963 * b1 + w * .2965; b2 = .57 * b2 + w * 1.0527; d[i] = (b0 + b1 + b2 + w * .1848) * .2; }
+      audio.noise = n;
+      const src = () => { const s = ac.createBufferSource(); s.buffer = n; s.loop = true; s.start(0, Math.random() * 2.5); return s; };
+      audio.master = ac.createGain(); audio.master.connect(ac.destination);
+      // rain: a high hiss and a lower patter
+      audio.rain = ac.createGain(); audio.rain.gain.value = 0; audio.rain.connect(audio.master);
+      const hp = ac.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 1200; src().connect(hp); hp.connect(audio.rain);
+      const bp = ac.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 450; bp.Q.value = .7; const bg = ac.createGain(); bg.gain.value = .6;
+      src().connect(bp); bp.connect(bg); bg.connect(audio.rain);
+      // wind: a band of noise whose pitch and loudness gust
+      audio.wind = ac.createGain(); audio.wind.gain.value = 0; audio.wind.connect(audio.master);
+      const wf = audio.windF = ac.createBiquadFilter(); wf.type = "bandpass"; wf.frequency.value = 380; wf.Q.value = 1.4; src().connect(wf); wf.connect(audio.wind);
+    } catch (e) { audio.ac = null; }
+  }
+  function thunder() {
+    if (!audio.ac || audio.muted || audio.paused || !audio.on) return;
+    const ac = audio.ac, now = ac.currentTime, s = ac.createBufferSource(); s.buffer = audio.noise;
+    const lp = ac.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.setValueAtTime(1800, now); lp.frequency.exponentialRampToValueAtTime(90, now + 2.5);
+    const g = ac.createGain(), v = VOL.thunder * (.6 + Math.random() * .4);
+    g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(v, now + .06); g.gain.setValueAtTime(v * .7, now + .4);
+    g.gain.linearRampToValueAtTime(v * .9, now + .9); g.gain.exponentialRampToValueAtTime(.001, now + 4.5 + Math.random() * 2);
+    s.connect(lp); lp.connect(g); g.connect(audio.master); s.start(now, Math.random() * 2); s.stop(now + 7);
+  }
+  function mixAudio(t, dt) {
+    if (!audio.fire) return;
+    const live = audio.on && !audio.muted && !audio.paused, w = sky && sky.wx, k = Math.min(1, dt * 1.5);
+    for (const [el, v] of [[audio.fire, VOL.fire], [audio.music, VOL.music]]) {
+      const target = live ? v : 0; el.volume = Math.max(0, Math.min(1, el.volume + (target - el.volume) * k));
+      if (live && el.paused) el.play().catch(() => { }); else if (!live && !el.paused && el.volume < .01) el.pause();
+    }
+    if (audio.ac && w) {
+      if (live && audio.ac.state === "suspended") audio.ac.resume();
+      const rain = live ? VOL.rain * Math.max(w.rain, w.kind === "drizzle" ? .3 : 0) : 0;
+      const gust = .6 + .4 * Math.sin(t * .7) * Math.sin(t * .23 + 1);
+      const wind = live ? VOL.wind * Math.min(1, w.wind / 50 + (w.kind === "blizzard" ? .6 : 0)) * gust : 0;
+      audio.rain.gain.value += (rain - audio.rain.gain.value) * k; audio.wind.gain.value += (wind - audio.wind.gain.value) * k;
+      audio.windF.frequency.value = 300 + 260 * gust;
+    }
+  }
+  window.pantheonAudio = {
+    pause() { audio.paused = true; [audio.fire, audio.music].forEach(a => a && a.pause()); if (audio.ac) audio.ac.suspend(); },
+    resume() { audio.paused = false; },
+    toggle() { audio.muted = !audio.muted; try { localStorage.setItem("pantheon_mute", audio.muted ? "1" : "0"); } catch (e) { }
+               document.body.classList.toggle("muted", audio.muted); return !audio.muted; },
+    thunder, get muted() { return audio.muted; },
+  };
+  document.addEventListener("DOMContentLoaded", () => document.body.classList.toggle("muted", audio.muted));
 
   // ---------------------------------------------------------------- the fire breath: a loop of real fire footage
   // FIRE_SHEET (dragon/fire.js): frames of a flame jet streaming left to right, already see-through (black made clear),
@@ -253,7 +551,10 @@
 
   window.sceneHome = (t, dt) => {
     if (!on) return;
+    drawSky(t, dt);
+    drawRoom(t, dt);
     drawSconces(t, dt);
+    mixAudio(t, dt);
     breathe(t, dt);
     drawJet(t);
     roastIcons(dt);
@@ -278,6 +579,9 @@
       useMascot(D, D.idle.h * big, { up: D.hop.up, down: D.hop.down, end: D.hop.end, rate: 1.6 },
                 { perchDx: reach * big + GAP, perchY: () => ICON_Y + rise * big });
       sconces = makeSconces();
+      sky = sky || makeSky(); sky.cv.style.display = sky.flash.style.display = "";
+      room = room || makeRoom(); room.layers.forEach(l => (l.im.style.display = "")); [room.shade, room.rays, ...room.fog.map(f => f.el)].forEach(e => (e.style.display = ""));
+      startAudio(); audio.on = true;
       jet = jet || makeJet();
       setFilms(seasons()); coverFallbacks();
       const lib = $("#toLib"); if (lib && lib.firstChild) lib.firstChild.textContent = "The Seasons";
@@ -289,6 +593,9 @@
       delete document.body.dataset.nogarden;
       if (section === 2) section = 1;
       sconces.forEach(sc => sc.cv.remove()); sconces = [];
+      if (sky) { sky.cv.style.display = sky.flash.style.display = "none"; }
+      if (room) { room.layers.forEach(l => (l.im.style.display = "none")); [room.shade, room.rays, ...room.fog.map(f => f.el)].forEach(e => (e.style.display = "none")); }
+      audio.on = false; window.pantheonAudio.pause(); audio.paused = false;
       if (jet) { jet.cv.remove(); jet = null; }
       for (const i in roast) if (roast[i].el) roast[i].el.style.filter = "";
       roast = {}; fire = [];

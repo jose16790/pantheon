@@ -38,3 +38,7 @@ scripts/tvs/
 
 # the dragon and fire source clips (~30 MB): only needed to re-cut the sprites (tools/dragon_sprites.py, fire_sprites.py)
 adult-space/hogwarts/dragon/src/*.mp4
+
+# your own music for the Game of Thrones theme (scripts/add-music.sh): local only, never committed
+adult-space/hogwarts/sounds/got/music-local.*
+adult-space/hogwarts-tv/app/src/main/assets/www/sounds/got/music-local.*

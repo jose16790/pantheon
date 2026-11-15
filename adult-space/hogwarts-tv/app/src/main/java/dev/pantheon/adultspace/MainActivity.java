@@ -78,6 +78,7 @@ public class MainActivity extends Activity {
 
     private ThemeManager themes;
     private VoiceAgent voice;
+    private dev.pantheon.adultspace.weather.Weather weather;          // the weather wizard's data (weather/Weather.java)
 
     /** The castle while it's on screen, so the mic button (assist/PantheonSession) can make it listen. */
     private static volatile MainActivity showing;
@@ -111,6 +112,8 @@ public class MainActivity extends Activity {
         voice = new VoiceAgent(this, new AgentClient(() -> AgentConfig.url(this)), () -> themes.current().id(),
                 (vs, text) -> web.evaluateJavascript("window.pantheonVoice && pantheonVoice(" + JSONObject.quote(vs) + ","
                         + (text == null ? "null" : JSONObject.quote(text)) + ")", null));
+ weather = new dev.pantheon.adultspace.weather.Weather(this,
+                json -> web.evaluateJavascript("window.pantheonWeather && pantheonWeather(" + json + ")", null));
         Log.i(AgentClient.TAG, "agent endpoint: " + AgentConfig.url(this) + " · theme: " + themes.current().id());
         if ((getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0) WebView.setWebContentsDebuggingEnabled(true);
 
@@ -175,14 +178,25 @@ public class MainActivity extends Activity {
         dev.pantheon.adultspace.home.HomeGuard.ensure(this, "Pantheon opened");
         String asked = intent.getStringExtra("theme");
         if (asked != null && themes.set(asked)) applyTheme();
+        // testing the weather wizard: adb shell am start ... --es wx thunder [--es wx_at 2026-11-14T14:00Z]  (--es wx live: back to real)
+        String wx = intent.getStringExtra("wx");
+        if (wx != null) web.evaluateJavascript("window.pantheonWxTest && pantheonWxTest(" + JSONObject.quote(wx) + ","
+                + (intent.getStringExtra("wx_at") == null ? "null" : JSONObject.quote(intent.getStringExtra("wx_at"))) + ")", null);
         String agentAsked = intent.getStringExtra("agent_url");
         if (agentAsked != null) AgentConfig.set(this, agentAsked);
         if (intent.hasCategory(Intent.CATEGORY_HOME)) { isHome = true; web.evaluateJavascript("window.tvHome && tvHome()", null); }
         else if (intent.getBooleanExtra(EXTRA_GO_HOME, false)) web.evaluateJavascript("window.tvHome && tvHome()", null);
     }
 
-    @Override protected void onResume() { super.onResume(); showing = this; web.onResume(); web.requestFocus(); }
-    @Override protected void onPause() { if (showing == this) showing = null; web.onPause(); super.onPause(); }
+    @Override protected void onResume() {
+        super.onResume(); showing = this; web.onResume(); web.requestFocus(); weather.start();
+        web.evaluateJavascript("window.pantheonAudio && pantheonAudio.resume()", null);
+    }
+    @Override protected void onPause() {
+        if (showing == this) showing = null;
+        web.evaluateJavascript("window.pantheonAudio && pantheonAudio.pause()", null);   // silent the moment an app opens
+        weather.stop(); web.onPause(); super.onPause();
+    }
     @Override protected void onDestroy() { voice.destroy(); web.destroy(); super.onDestroy(); }
 
     /** Switch theme (voice: "switch to Game of Thrones"). False for an unknown id. */
@@ -210,6 +224,9 @@ public class MainActivity extends Activity {
                 open("com.android.tv.settings");
             });
         }
+
+        /** Pantheon: the last weather the TV fetched ({} before the first), as weather/Weather.java keeps it. */
+        @JavascriptInterface public String weather() { return weather.latest(); }
 
         /** Pantheon: start listening (the page's mic icon). */
         @JavascriptInterface public void listen() { runOnUiThread(() -> voice.listen()); }

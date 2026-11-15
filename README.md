@@ -178,8 +178,37 @@ Thrones", "Hogwarts theme". The whole home changes with it.
 | Theme | Home | Mascot | Library |
 |---|---|---|---|
 | **Hogwarts** | the castle by the lake | Hedwig the owl hops between apps | the eight films |
-| **Game of Thrones** | a firelit throne room, torches burning live | a dragon hops between apps and **breathes fire on the one you pick**: it glows, chars, smoulders and cools back | the eight seasons, each with its own cover and a one-line caption |
+| **Game of Thrones** | a firelit throne room that follows the real weather and daylight, torches burning live | a dragon hops between apps and **breathes fire on the one you pick**: it glows, chars, smoulders and cools back | the eight seasons, each with its own cover and a one-line caption |
 | **Marvel** | colours only for now | | |
+
+### Live weather and sound (Game of Thrones)
+
+The throne room follows the real world outside wherever the TV is. The location comes from the TV's internet address, so
+it works anywhere (Canada, India and so on) with no setup:
+
+- **Weather in the windows**: clear, cloudy, fog, drizzle, rain, snow, blizzard, and thunderstorms with lightning that
+  flashes the room. Clouds drift past.
+- **Light from the sun**: the room moves through night, dawn, golden hour and day by the sun's real height. Light shafts
+  slant with its direction, and the moon shows its real phase.
+- **Torches** burn live in all four sconces, and fog drifts across the floor.
+- **Sound**: crackling torches with a quiet original score, plus rain, wind and thunder to match the weather. Mute it with
+  the speaker in the top row. The sound pauses when you open an app.
+
+Weather data: [Open-Meteo](https://open-meteo.com) (no key needed), refreshed every 15 minutes. The sun and moon are
+worked out on the TV.
+
+**Your own music.** To play a track you own in place of the built-in score (it stays on your machine and is never
+committed), run:
+
+```bash
+./scripts/add-music.sh ~/Music/your-track.mp3
+```
+
+Then reinstall with `./install.sh`. To go back to the built-in score, run `./scripts/add-music.sh --remove`.
+
+**Testing a weather**: `adb shell am start -n dev.pantheon.adultspace/.MainActivity --es wx thunder --es wx_at 2026-11-14T21:00`
+(clear | partly | overcast | fog | drizzle | rain | heavyrain | snow | blizzard | thunder). Use `--es wx live` to return to
+the real weather.
 
 A theme is a `ThemeData` class (`theme/`) for its colours and pictures, plus, optionally, a scene in
 `themes/<id>.js` for its mascot, live effects and books (see `themes/got.js`).

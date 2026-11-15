@@ -34,6 +34,9 @@
     body[data-theme="got"] #moonglow, body[data-theme="got"] #cloud1, body[data-theme="got"] #potG, body[data-theme="got"] #potP,
     body[data-theme="got"] #potA { display: none !important; }
     body[data-nogarden] #toGarden { display: none !important; }
+    body[data-theme="got"] #mist1, body[data-theme="got"] #mist2 { display: none !important; }
+    #soundIcon .slash { display: none; } body.muted #soundIcon .slash { display: inline; } body.muted #soundIcon .wave { display: none; }
+    body:not([data-theme="got"]) #soundIcon { display: none; }
     /* Game of Thrones books: rustic. Worn leather, bronze bands, the art inlaid like a plate, a parchment label */
     body[data-theme="got"] .spine .roman { margin-top: 3px; font-family: "Cinzel", Georgia, serif; font-weight: 700; font-size: 14px;
                                            color: #d9b778; letter-spacing: .04em; }

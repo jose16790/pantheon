@@ -38,6 +38,8 @@ BAKE = {   # the gradients of #hshade and #lvig in index.html (as in tv_assets.p
                            lambda X, Y: radial(X, Y, .55, .45, .80, .70, [(0, 0), (.60, 0), (1, .45), (9, .45)])],
     "img/got/shelf.jpg": [lambda X, Y: radial(X, Y, .51, .50, .80, .75, [(0, 0), (.58, 0), (1, .50), (9, .50)])],
 }
+for v in ("overcast", "day", "golden"):   # the room by day and at golden hour (the weather wizard crossfades them)
+    BAKE[f"img/got/throne_{v}.jpg"] = BAKE["img/got/throne.jpg"]
 os.makedirs(os.path.join(OUT, "img", "got"), exist_ok=True)
 for rel, alphas in BAKE.items():
     im = Image.open(os.path.join(SRC, rel)).convert("RGB")
@@ -47,3 +49,8 @@ for rel, alphas in BAKE.items():
 os.makedirs(os.path.join(OUT, "dragon"), exist_ok=True)
 for f in ("idle.webp", "hop.webp", "breath.webp", "dragon.js"):
     shutil.copy2(os.path.join(SRC, "dragon", f), os.path.join(OUT, "dragon", f))
+for f in ("glass.png", "clouds_puffy.webp", "clouds_wispy.webp", "torch.webp", "torch.js"):
+    shutil.copy2(os.path.join(SRC, "img", "got", f), os.path.join(OUT, "img", "got", f))
+os.makedirs(os.path.join(OUT, "sounds", "got"), exist_ok=True)
+for f in os.listdir(os.path.join(SRC, "sounds", "got")):
+    shutil.copy2(os.path.join(SRC, "sounds", "got", f), os.path.join(OUT, "sounds", "got", f))
