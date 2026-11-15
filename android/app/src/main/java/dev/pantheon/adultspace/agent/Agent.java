@@ -40,17 +40,32 @@ public final class Agent {
     private final OpenRouter or;
     private final Council council;
     private final Speaker speaker;
+    private final Memory memory;
     private int request;                                       // the newest council request; older answers are dropped
     private long voiceCouncilAt;                               // when a Council request last came by voice (its picks are announced)
+    private String voiceCouncilAsk = "";
 
     public Agent(MainActivity act, Consumer<String> js) {
         this.act = act; this.js = js;
         tmdb = new Tmdb(act); or = new OpenRouter(act);
-        council = new Council(act, tmdb, or, pool);
+        memory = new Memory(act);
+        council = new Council(act, tmdb, or, pool, memory);
         speaker = new Speaker(act, pool, js);
     }
 
     private String theme() { return act.themeId(); }
+
+    /** A title was opened from Pantheon (the Council's cards, or by voice): remembered, so it isn't suggested again. */
+    public void opened(String title) { pool.execute(() -> memory.opened(title)); }
+
+    private String[] names() { return Persona.names(theme()); }
+
+    /** The exchange is over: kept for follow-ups, and anything worth knowing about you is learnt (in the background). */
+    private void done(String said, String answered) {
+        if (answered == null || answered.trim().isEmpty()) return;
+        memory.exchange(said, answered);
+        pool.execute(() -> memory.learn(or, said, answered));
+    }
 
     /** A quick spoken "at once" for the commands the TV runs by itself (a recorded line: instant, free). */
     public void ack() { speaker.stock(theme(), "ack"); }
@@ -73,9 +88,12 @@ public final class Agent {
                     if (System.currentTimeMillis() - voiceCouncilAt < 30_000) {      // you asked by voice: the Hand announces them
                         voiceCouncilAt = 0;
                         JSONArray p = r.optJSONArray("picks");
-                        if (p != null && p.length() > 0)
-                            speaker.say(theme(), Persona.picks(theme(), p.optJSONObject(0).optString("title"),
-                                    p.length() > 1 ? p.optJSONObject(1).optString("title") : null, p.length() > 2 ? p.optJSONObject(2).optString("title") : null));
+                        if (p != null && p.length() > 0) {
+                            String line = Persona.picks(theme(), p.optJSONObject(0).optString("title"),
+                                    p.length() > 1 ? p.optJSONObject(1).optString("title") : null, p.length() > 2 ? p.optJSONObject(2).optString("title") : null);
+                            speaker.say(theme(), line);
+                            done(voiceCouncilAsk, line);
+                        }
                     }
                 }
                 @Override public void reasons(JSONObject r) { toPage(id, "onReasons", r.toString()); }
@@ -97,9 +115,12 @@ public final class Agent {
     static {
         try {
             ROUTES.put("recommend", "Wants ideas for what to watch: a mood, a genre, a time, 'something like…', 'what should I watch'.")
-                  .put("play_title", "Names one specific film or series to watch now, or continue: 'put on Dune', 'play the new Bond film'.")
+                  .put("play_title", "Names one specific film or series to watch now, or picks one of the Council's suggestions: "
+                          + "'put on Dune', 'play the second one', 'let's watch Upload'.")
                   .put("control", "Wants the TV or Pantheon to do something: open an app, volume, playback, switch theme, go home.")
-                  .put("question", "Asks a question to be answered in words: about a film, an actor, the weather, anything.");
+                  .put("question", "Asks a question to be answered in words: about a film, an actor, the weather, anything; "
+                          + "or a follow-up to what was just said ('tell me more', 'and Austin?').")
+                  .put("memory", "Asks the TV to remember something about them, to forget something, or what it knows about them.");
         } catch (Exception ignored) { }
     }
 
@@ -110,14 +131,19 @@ public final class Agent {
             try {
                 JSONObject q = new JSONObject().put("route", new JSONObject().put("type", "choice")
                         .put("instructions", "What kind of request did the viewer say to their TV?").put("criteria", ROUTES));
-                JSONObject a = or.decide(new JSONObject().put("said", text), q, 4000).getJSONObject("route");
+                JSONObject st = new JSONObject().put("said", text);
+                String recent = memory.conversation("viewer", "tv"), picks = memory.lastPicks();
+                if (!recent.isEmpty()) st.put("just_before", recent.length() > 600 ? recent.substring(recent.length() - 600) : recent);
+                if (!picks.isEmpty()) st.put("suggestions_on_screen", picks);
+                JSONObject a = or.decide(st, q, 4000).getJSONObject("route");
                 route = a.optString("choice", "control");
                 Log.i(TAG, "voice \"" + text + "\" -> " + route + " (" + a.optDouble("confidence") + ")");
                 if (a.optDouble("confidence", 0) < 0.25) route = "control";      // unsure: the chat model with every action
             } catch (Exception e) { Log.w(TAG, "Jev route failed: " + e.getMessage()); }
             try {
                 switch (route) {
-                    case "recommend":  voiceCouncilAt = System.currentTimeMillis();
+                    case "memory":     remember(text, say); break;
+                    case "recommend":  voiceCouncilAt = System.currentTimeMillis(); voiceCouncilAsk = text;
                                        String said = speaker.stock(theme(), "council");
                                        ui(() -> { js.accept("window.pantheonCouncil && pantheonCouncil.fromVoice(" + JSONObject.quote(text) + ")");
                                                   say.state("reply", reply(said != null ? Speaker.plain(said) : "Asking the council…")); }); break;
@@ -134,8 +160,10 @@ public final class Agent {
     }
 
     private void playTitle(String text, Say say) throws Exception {
-        JSONObject t = or.json("Which film or series does the viewer want to watch? Reply with JSON only: "
-                + "{\"title\": \"its exact official title\", \"kind\": \"movie\", \"tv\" or \"any\", \"year\": the year if known or 0}", text, 80, 6000);
+        JSONObject t = or.json("Which film or series does the viewer want to watch? They may refer to the suggestions on "
+                + "screen ('the second one'). Reply with JSON only: "
+                + "{\"title\": \"its exact official title\", \"kind\": \"movie\", \"tv\" or \"any\", \"year\": the year if known or 0}",
+                memory.context("viewer", "tv") + "\nThe viewer says: " + text, 80, 6000);
         String title = t.optString("title", "").trim();
         if (title.isEmpty()) { control(text, say); return; }
         Services svc = Services.get(act, tmdb);
@@ -155,6 +183,7 @@ public final class Agent {
                     if (!svc.pkgFor.containsKey(id)) continue;
                     String pkg = svc.pkgFor.get(id), service = svc.nameFor.get(id);
                     speaker.stock(theme(), "ack");
+                    done(text, "Opening " + name + " on " + service + ".");
                     ui(() -> { act.openTitle(pkg, name); say.state("reply", reply("Opening " + name + " on " + service)); });
                     return;
                 }
@@ -177,7 +206,7 @@ public final class Agent {
     /** A question: a recorded "one moment" at once, then the persona's answer from live sources, spoken and shown. */
     private void answer(String text, Say say) throws Exception {
         speaker.stock(theme(), "think");
-        StringBuilder ctx = new StringBuilder("The viewer asks: ").append(text).append("\nLocal time: ")
+        StringBuilder ctx = new StringBuilder(memory.context(names()[0], names()[1])).append("\nThe viewer now asks: ").append(text).append("\nLocal time: ")
                 .append(new java.text.SimpleDateFormat("EEEE d MMMM yyyy, h:mm a", Locale.UK).format(new java.util.Date()))
                 .append(". The TV is in ").append(dev.pantheon.adultspace.weather.Weather.country(act)).append(".\n");
         if (NEWSY.matcher(text).find()) ctx.append("\nToday's headlines (from Google News, for the TV's country):\n").append(headlines());
@@ -188,6 +217,28 @@ public final class Agent {
         Log.i(TAG, "answer: " + Speaker.plain(out));
         speaker.say(theme(), out);
         ui(() -> say.state("reply", reply(Speaker.plain(out))));
+        done(text, out);
+    }
+
+    /** "Remember that…", "forget that…", "forget everything", "what do you know about me?" */
+    private void remember(String text, Say say) throws Exception {
+        JSONArray f = memory.facts();
+        StringBuilder list = new StringBuilder();
+        for (int i = 0; i < f.length(); i++) list.append(i).append(": ").append(f.optJSONObject(i).optString("t")).append("\n");
+        JSONObject r = or.json(Persona.of(theme()) + " Now you are handling a request about your memory of the viewer. Reply "
+                + "with JSON only: {\"action\": \"remember\" | \"forget\" | \"forget_all\" | \"recall\", \"fact\": \"a short fact to "
+                + "keep, for remember\", \"remove\": [indexes of facts to forget], \"reply\": \"what you say back, in character (for "
+                + "recall: sum up what you know, briefly)\"}",
+                "What you remember now:\n" + (list.length() == 0 ? "(nothing yet)\n" : list) + "\nThe viewer says: " + text, 260, 9000);
+        String action = r.optString("action");
+        if ("remember".equals(action)) memory.addFact(r.optString("fact"));
+        else if ("forget".equals(action)) memory.removeFacts(r.optJSONArray("remove"));
+        else if ("forget_all".equals(action)) memory.forgetAll();
+        Log.i(TAG, "memory: " + action + (r.optString("fact").isEmpty() ? "" : " \"" + r.optString("fact") + "\"") + "; says: " + Speaker.plain(r.optString("reply")));
+        String out = r.optString("reply", "");
+        speaker.say(theme(), out);
+        ui(() -> say.state("reply", reply(Speaker.plain(out))));
+        if (!"forget_all".equals(action)) memory.exchange(text, out);
     }
 
     private String headlines() {
@@ -223,10 +274,11 @@ public final class Agent {
                 + "JSON only: {\"reply\": \"a few words on what you did\", \"actions\": [...]}. Actions: "
                 + "{\"type\":\"launch\",\"app\":\"app name\"}, {\"type\":\"key\",\"key\":\"home|play_pause|play|pause|next|previous|volume_up|volume_down|mute\"}, "
                 + "{\"type\":\"volume\",\"percent\":0-100}, {\"type\":\"search\",\"query\":\"title\"}, {\"type\":\"theme\",\"id\":\"got|hogwarts|marvel\"}, {\"type\":\"sleep\"} (turn the TV off). "
-                + "Use no actions if none fit, and say so briefly in reply.", text, 200, 8000);
+                + "Use no actions if none fit, and say so briefly in reply.", memory.context("viewer", "tv") + "\nThe viewer says: " + text, 200, 8000);
         ui(() -> {
             int done = Actions.run(act, a.toString());
             if (done > 0) speaker.stock(theme(), "ack"); else speaker.say(theme(), a.optString("reply"));
+            memory.exchange(text, a.optString("reply"));
             say.state("reply", a.toString());
         });
     }
