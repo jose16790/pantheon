@@ -169,6 +169,8 @@ public final class Agent {
 
     private static final java.util.regex.Pattern NEWSY = java.util.regex.Pattern.compile(
             "(?i)\\b(news|headlines?|happening|going on|world|today'?s|latest|markets?|stocks?)\\b");
+    private static final java.util.regex.Pattern DETAIL = java.util.regex.Pattern.compile(
+            "(?i)\\b(in detail|detailed|tell me more|more about|explain|elaborate|everything|in depth|the full)\\b");
     private static final java.util.regex.Pattern FLIGHTS = java.util.regex.Pattern.compile(
             "(?i)\\b(flights?|delays?|delayed|airports?|ground stop|faa)\\b");
 
@@ -181,7 +183,8 @@ public final class Agent {
         if (NEWSY.matcher(text).find()) ctx.append("\nToday's headlines (from Google News, for the TV's country):\n").append(headlines());
         if (FLIGHTS.matcher(text).find()) ctx.append("\nLive US airport status from the FAA (only airports with delays are listed; "
                 + "an airport not listed has no reported delay):\n").append(faa());
-        String out = or.talk(Persona.of(theme()), ctx.toString(), true, 260, 20000);
+        boolean detailed = DETAIL.matcher(text).find();
+        String out = or.talk(Persona.of(theme(), detailed), ctx.toString(), true, detailed ? 320 : 110, 20000);
         Log.i(TAG, "answer: " + Speaker.plain(out));
         speaker.say(theme(), out);
         ui(() -> say.state("reply", reply(Speaker.plain(out))));
