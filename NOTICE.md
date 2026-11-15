@@ -1,6 +1,8 @@
 # Credits and third-party notices
 
-Pantheon stands on two open-source projects. Thank you to both authors.
+Pantheon is designed and built by Jose ([jose16790](https://github.com/jose16790)). Its Game of Thrones theme is
+Pantheon's own, and so will its Marvel theme be. Pantheon stands on two open-source projects. Thank you to both
+authors.
 
 ## hogwarts-tv-home, by ikevinadams
 
@@ -9,7 +11,10 @@ Pantheon stands on two open-source projects. Thank you to both authors.
 - Licence: MIT, Copyright (c) 2026 ikevinadams
 - Used for: the whole `adult-space/` base. That includes the WebView home-screen shell
   (`MainActivity`), the castle page (`hogwarts/index.html`), D-pad navigation, the
-  hopping-owl animation and the asset tools (`hogwarts/tools/`).
+  hopping-owl animation and the asset tools (`hogwarts/tools/`), and the whole Hogwarts theme.
+- Modified by Pantheon: the voice agent and mic button, the theme picker and the Game of Thrones scene,
+  the place and weather under the clock, the headlines, the Home takeover and its self-repair, the unbloat,
+  the dock's apps, and the installer.
 
 The upstream licence notes that it covers the code only: *"The pictures and clips are fan
 art for personal use, and the film posters and app logos belong to their owners; none of
@@ -26,7 +31,7 @@ your own machine for a personal build.
   `bridge/agentic.py`). Pantheon's home-network address check in `AgentClient.java` is
   adapted from `AskWire.isLocalHost`.
 
-## Pantheon's own artwork (Game of Thrones theme)
+## Pantheon's own artwork (the Game of Thrones theme, by Jose)
 
 The throne room (`img/got/throne.jpg`), the library shelf (`img/got/shelf.jpg`), the eight season covers
 (`img/got/covers/`), the dragon (`dragon/`) and its fire breath were generated with AI image and video models for
@@ -36,6 +41,11 @@ the cloud panoramas (`img/got/clouds_*.webp`), the torch flame and its crackle (
 `sounds/got/fire.mp3`), and the score (`sounds/got/music.mp3`, an original track made with Sume Music 1.0; not the
 show's theme). They're included in this repository under the same MIT licence as the code. They depict an unofficial
 fan theme; the names and the world they evoke belong to their owners (below).
+
+## Headlines
+
+The headlines panel shows the top stories from Google News' public RSS feeds (national, world and business, for the
+TV's country). Only each story's headline, source and time are shown; they belong to their publishers.
 
 ## Weather and astronomy
 

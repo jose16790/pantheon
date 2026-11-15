@@ -1,3 +1,6 @@
+> **From the original [hogwarts-tv-home](https://github.com/ikevinadams/hogwarts-tv-home) by ikevinadams**, kept for
+> reference. Pantheon (Jose's project, built on it) is described in the [main README](../README.md).
+
 # Set up Hogwarts TV on your TV with a coding assistant
 
 Paste the prompt below into a coding assistant that can run commands (Claude Code, or another) on a computer on the same Wi-Fi

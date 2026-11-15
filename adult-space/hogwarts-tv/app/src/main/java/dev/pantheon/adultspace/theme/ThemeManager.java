@@ -21,7 +21,7 @@ import java.util.Map;
  */
 public final class ThemeManager {
     private static final String TAG = "Pantheon/Theme";
-    public static final String DEFAULT = "hogwarts";
+    public static final String DEFAULT = "got";       // Game of Thrones: Pantheon's own theme
 
     /** Every theme, in the order they're offered. */
     public static final List<ThemeData> ALL = Collections.unmodifiableList(Arrays.asList(

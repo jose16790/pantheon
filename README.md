@@ -1,16 +1,25 @@
 # Pantheon
 
-A custom, ad-free Android TV home screen with a voice agent behind the remote's microphone.
+A custom, ad-free Android TV home screen with themes that come alive, live weather, headlines, and a voice agent
+behind the remote's microphone. Designed and built by **Jose** ([jose16790](https://github.com/jose16790)).
 
-**Adult Space** is the first "space". It's the animated castle home from
-[hogwarts-tv-home](https://github.com/ikevinadams/hogwarts-tv-home), with a hopping owl, a film library and a
-greenhouse. Pantheon adds three things to it:
+| Theme | |
+|---|---|
+| **Game of Thrones** (the default) | **Pantheon's own theme, fully built by Jose:** a firelit throne room that follows the real weather and daylight outside, Drogon breathing fire on the app you pick, a royal greeting, the Ravens' headlines, and the eight seasons as rustic books. All its artwork, sound and code were made for Pantheon. |
+| **Hogwarts** | The animated castle from [hogwarts-tv-home](https://github.com/ikevinadams/hogwarts-tv-home) by **ikevinadams**, which Pantheon is built on. Pantheon has modified it with several new features (below). |
+| **Marvel** | Coming next, also Pantheon's own. Only its colours exist so far. |
 
-- **Voice agent:** press the mic, speak, and the text is sent to your own agent (a Raspberry Pi on your home network).
-  The design follows the agentic remote in [couch-tv](https://github.com/Seagey/couch-tv).
-- **Themes:** colours and backdrops come from a `ThemeData` interface, so the look can be swapped. Hogwarts is the
-  full theme. Game of Thrones and Marvel are palette-only stubs for now.
-- **Clean open-source split:** the code is MIT, and the fan art is fetched locally and never committed.
+**What Pantheon adds, in every theme:**
+
+- **It's the home screen, for real.** The Home button and turning on the TV go to Pantheon, never Google's home, and
+  the ads and bloat are switched off (reversibly).
+- **Voice:** the remote's mic button is Pantheon's. Simple commands ("open YouTube", "volume to 30", "switch to
+  Game of Thrones") run on the TV itself, and everything else goes to your own agent. The design follows the
+  agentic remote in [couch-tv](https://github.com/Seagey/couch-tv) by **Seagey**.
+- **Theme picker:** the crown in the top row switches the whole home, or just say "switch to Hogwarts".
+- **Where you are:** the place, temperature and weather under the clock, wherever the TV is.
+- **Headlines:** the top national, world and business stories for the TV's country, rotating through the top ten.
+- **One-command install** for friends, below.
 
 > Unofficial fan project. Not affiliated with Warner Bros., HBO, Marvel/Disney, Google or the app makers whose logos
 > the dock shows. See [NOTICE.md](NOTICE.md).
@@ -32,19 +41,26 @@ window, since it asks questions. To update later: `git pull && ./install.sh`.
 
 ```
 adult-space/
-  hogwarts/                 the home-screen page (HTML/JS): layout, D-pad, the owl, the voice banner
-    index.html              sections, the remote's keys (keydown handler), owl animation
-    themes/theme.js         applies a theme (CSS variables + picture slots) and shows the voice banner
-    tools/                  picture pipeline (tv_assets.py makes the TV-sized copies)
+  hogwarts/                 the home-screen page (HTML/JS), shared by every theme
+    index.html              sections, the remote's keys, the mascot, the dock, the clock
+    themes/theme.js         applies a theme (CSS variables, pictures, scene) and the theme picker
+    themes/got.js           the Game of Thrones scene: Drogon and his fire, torches, sky, room light, fog, sound, greeting
+    themes/weather.js       the weather wizard: the weather outside, the sun's and moon's positions, the moon's phase
+    themes/news.js          the headlines panel
+    img/got/, dragon/, sounds/got/   the Game of Thrones theme's artwork, dragon sprites and sound (made for Pantheon)
+    tools/                  how those were made, and the TV-sized copies (got_*.py, tv_assets.py)
   hogwarts-tv/              the Android TV app (a full-screen WebView + a JS bridge called `TV`)
     app/src/main/java/dev/pantheon/adultspace/
       MainActivity.java     the WebView, the bridge, remote keys
-      voice/VoiceAgent.java mic → speech-to-text (system voice screen, else in-app recognizer)
-      voice/AgentClient.java  POST to the agent, response → Logcat
-      theme/ThemeData.java  the theme interface; HogwartsTheme, GameOfThronesTheme, MarvelTheme
-      theme/ThemeManager.java the active theme (saved), handed to the page as JSON
+      voice/                mic → speech-to-text → local commands or the agent; the agent's actions
+      assist/               Pantheon as the TV's assistant (the remote's mic button)
+      home/                 the Home watch and its self-repair (Pantheon stays the home screen)
+      weather/Weather.java  where the TV is (from its internet connection) and the weather there
+      news/News.java        the headlines, by the TV's country
+      theme/                ThemeData: GameOfThronesTheme, HogwartsTheme, MarvelTheme; ThemeManager (default: got)
   build.sh                  builds the APK
-scripts/fetch-fanart.sh     downloads the castle pictures from upstream for a personal build
+install.sh                  one-command setup: tools, build, pairing, install, home screen, unbloat, theme
+scripts/                    home.sh, unbloat.sh, assistant.sh, add-music.sh, fetch-fanart.sh (the castle's pictures)
 ```
 
 ## Build by hand
@@ -88,7 +104,8 @@ press. Google's home may flash up for a moment. **Holding Home** still opens Goo
 Settings gear. A **crash guard** stands the watch aside for 10 minutes if Pantheon crashes twice in 5, so the TV
 can't get stuck.
 
-Pantheon's top row (Up from the dock): **Wi-Fi**, **TV settings**, **Ask** (voice), **Customise**.
+Pantheon's top row (Up from the dock): **Wi-Fi**, **TV settings**, **Themes** (the crown), **Sound** (Game of Thrones),
+**Ask** (voice), **Customise**.
 
 `unbloat.sh` switches off ambient mode (the idle screensaver with ads), ad services, feedback reporting, the
 Google TV / Play Movies shop, Play Games, Gallery and TalkBack. It refuses anything the TV needs: the homes, the
@@ -173,13 +190,32 @@ HTTPServer(('0.0.0.0',8080),H).serve_forever()"
 ## Themes
 
 Pick one with the **crown** in the top row (Up from the dock, then Left), or by voice: "switch to Game of
-Thrones", "Hogwarts theme". The whole home changes with it.
+Thrones", "Hogwarts theme". The whole home changes with it. New installs start on Game of Thrones.
 
-| Theme | Home | Mascot | Library |
-|---|---|---|---|
-| **Hogwarts** | the castle by the lake | Hedwig the owl hops between apps | the eight films |
-| **Game of Thrones** | a firelit throne room that follows the real weather and daylight, torches burning live | a dragon hops between apps and **breathes fire on the one you pick**: it glows, chars, smoulders and cools back | the eight seasons, each with its own cover and a one-line caption |
-| **Marvel** | colours only for now | | |
+### Game of Thrones: Pantheon's own, built by Jose
+
+| | |
+|---|---|
+| **Home** | the throne room, firelit, following the real weather and daylight outside (below) |
+| **Mascot** | Drogon hops between the apps and **breathes fire on the one you pick**: it glows, chars, smoulders and cools back |
+| **Greeting** | a royal-court line on a frosted parchment scroll under the clock, for the time of day ("The torches are lit, Your Grace."), a different one each day |
+| **Headlines** | *The Ravens*: The Realm (national), Across the Narrow Sea (world), The Iron Bank (business) |
+| **Library** | the eight seasons as rustic books, each with its own cover and a four-word caption |
+
+Every picture, sprite, sound and line of this theme was made for Pantheon (see [NOTICE.md](NOTICE.md)).
+
+### Hogwarts: by ikevinadams, extended by Pantheon
+
+The castle by the lake, with Hedwig hopping between apps, the films as a library and the greenhouse, is
+[hogwarts-tv-home](https://github.com/ikevinadams/hogwarts-tv-home) by **ikevinadams**. All credit for it goes to
+them. Pantheon has modified it with several new features: the voice agent and mic button, the theme picker, the
+place and weather under the clock, *The Daily Prophet*'s headlines, the Home takeover and self-repair, the unbloat,
+Crave and Disney+ in the dock, and the one-command installer. Its pictures stay upstream and are fetched onto your
+machine when you build (`scripts/fetch-fanart.sh`).
+
+### Marvel: coming next
+
+Pantheon's own, like Game of Thrones. Only its colours exist so far.
 
 ### Live weather and sound (Game of Thrones)
 
@@ -190,15 +226,16 @@ it works anywhere (Canada, India and so on) with no setup:
   flashes the room. Clouds drift past.
 - **Light from the sun**: the room moves through night, dawn, golden hour and day by the sun's real height. Light shafts
   slant with its direction, and the moon shows its real phase.
-- **Torches** burn live in all four sconces, and fog drifts across the floor.
+- **Torches** burn live in all four sconces. A little fog drifts through the hall at night; by day, dust floats in
+  the sunlight.
 - **Sound**: crackling torches and a quiet original score, plus rain, wind and thunder to match the weather. Mute it with
   the speaker in the top row. The sound pauses when you open an app.
 
 Weather data: [Open-Meteo](https://open-meteo.com) (no key needed), refreshed every 15 minutes. The sun and moon are
 worked out on the TV.
 
-**Your own music.** To play a track you own each time you come home (once, then the built-in score loops) (it stays on your machine and is never
-committed), run:
+**Your own music.** To play a track of your own each time you come home (once, then the built-in score loops; it
+stays on your machine and is never committed), run:
 
 ```bash
 ./scripts/add-music.sh ~/Music/your-track.mp3
@@ -217,11 +254,14 @@ From a computer: `adb shell am start -n dev.pantheon.adultspace/.MainActivity --
 
 ## Credits
 
-Built on [hogwarts-tv-home](https://github.com/ikevinadams/hogwarts-tv-home) by **ikevinadams** and
-[couch-tv](https://github.com/Seagey/couch-tv) by **Seagey**, both MIT. Full notices are in [NOTICE.md](NOTICE.md).
-The original castle project's README and guide are kept in `adult-space/`.
+- **Pantheon**, and its Game of Thrones theme, designed and built by **Jose** ([jose16790](https://github.com/jose16790)).
+- **Hogwarts** theme and the home-screen base: [hogwarts-tv-home](https://github.com/ikevinadams/hogwarts-tv-home) by
+  **ikevinadams** (MIT), modified by Pantheon. The original project's README and guide are kept in `adult-space/`.
+- **The agentic remote's design**: [couch-tv](https://github.com/Seagey/couch-tv) by **Seagey** (MIT).
+
+Full notices, including the weather and news sources and the font, are in [NOTICE.md](NOTICE.md).
 
 ## Licence
 
-[MIT](LICENSE) for the code. The castle pictures, owl sprites, film covers and app logos are not included and not
-licensed here.
+[MIT](LICENSE) for the code and for the Game of Thrones theme's own artwork and sound. The castle pictures, owl
+sprites, film covers and app logos are not included and not licensed here.

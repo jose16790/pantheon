@@ -147,13 +147,13 @@
       document.getElementById("stage").appendChild(el);
     },
     render() {
-      const now = document.body.dataset.theme || "hogwarts";
+      const now = document.body.dataset.theme || "got";
       this.el.querySelectorAll(".card").forEach((c, k) => { c.classList.toggle("foc", k === this.i); c.classList.toggle("current", c.dataset.id === now); });
     },
     show() {
       if (!this.el) this.build();
       if (typeof setGear === "function") setGear(false);
-      this.i = Math.max(0, CARDS.findIndex(c => c[0] === (document.body.dataset.theme || "hogwarts")));
+      this.i = Math.max(0, CARDS.findIndex(c => c[0] === (document.body.dataset.theme || "got")));
       this.open = true; this.el.classList.add("open"); this.render();
     },
     close() { this.open = false; if (this.el) this.el.classList.remove("open"); },
@@ -173,5 +173,5 @@
 
   // ---------------------------------------------------------------- start-up
   if (window.TV && TV.theme) window.pantheonApplyTheme(TV.theme());
-  else { const q = (location.search.match(/[?&]theme=(\w+)/) || [])[1]; window.pantheonApplyTheme(PREVIEW[q] || PREVIEW.hogwarts); }
+  else { const q = (location.search.match(/[?&]theme=(\w+)/) || [])[1]; window.pantheonApplyTheme(PREVIEW[q] || PREVIEW.got); }
 })();

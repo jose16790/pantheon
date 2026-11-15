@@ -1,3 +1,6 @@
+> **This is the original README of [hogwarts-tv-home](https://github.com/ikevinadams/hogwarts-tv-home) by ikevinadams**, kept
+> for reference. Pantheon (Jose's project, built on it) is described in the [main README](../README.md).
+
 # Hogwarts TV
 
 A wizarding-castle home screen for Android TV and Google TV, built as its own app. A castle at night across a lake: its

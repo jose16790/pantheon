@@ -1,3 +1,6 @@
+> **From the original [hogwarts-tv-home](https://github.com/ikevinadams/hogwarts-tv-home) by ikevinadams**, kept for
+> reference. Pantheon (Jose's project, built on it) is described in the [main README](../README.md).
+
 # Hogwarts TV: the full guide
 
 Full prompt and guide. A home screen for Android TV built around a castle at night: the castle's windows flicker, mist drifts over the lake, and a snowy owl sits on the app you've selected and flies to the next one as you move. Scroll down to a candle-lit library where the eight Harry Potter films are leather-bound books that turn to face you, and down again to a moonlit greenhouse with one beast for each Fantastic Beasts film. This guide has the steps to install the finished APK and make it yours (your apps on the dock, your streaming service for the films), every prompt used to make the pictures, and the prompts to build it yourself with a coding assistant, starting from cleaning up the TV. If you'd rather have a coding assistant set it all up for you, use [`PROMPT.md`](PROMPT.md).

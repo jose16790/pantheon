@@ -133,8 +133,8 @@ else
   ask "Switch those off?" && "$ROOT/scripts/unbloat.sh" apply | tail -1 || true
 fi
 echo
-T=$(askv "Theme: [1] Hogwarts  [2] Game of Thrones  [3] Marvel (colours only)  (Enter keeps Hogwarts):")
-case "$T" in 2) TH=got ;; 3) TH=marvel ;; *) TH="" ;; esac
+T=$(askv "Theme: [1] Game of Thrones  [2] Hogwarts  [3] Marvel (colours only)  (Enter: leave it; new installs start on Game of Thrones):")
+case "$T" in 1) TH=got ;; 2) TH=hogwarts ;; 3) TH=marvel ;; *) TH="" ;; esac
 [ -n "$TH" ] && "$ADB" -s "$SERIAL" shell am start -n dev.pantheon.adultspace/.MainActivity --es theme "$TH" >/dev/null 2>&1 && ok "theme: $TH"
 
 echo
