@@ -75,6 +75,17 @@ public class MainActivity extends Activity {
     private ThemeManager themes;
     private VoiceAgent voice;
 
+    /** The castle while it's on screen, so the mic button (assist/PantheonSession) can make it listen. */
+    private static volatile MainActivity showing;
+
+    /** Listen in the castle if it's on screen. False if it isn't (another app is in front). */
+    public static boolean listenIfShowing() {
+        MainActivity a = showing;
+        if (a == null || a.isFinishing()) return false;
+        a.web.postDelayed(() -> a.voice.listen(), 150);   // after the assist session has hidden
+        return true;
+    }
+
     /** Remote keys that mean "listen": the mic / Assistant / search button (whichever one the TV lets through). */
     private static boolean isVoiceKey(int code) {
         return code == KeyEvent.KEYCODE_SEARCH || code == KeyEvent.KEYCODE_VOICE_ASSIST || code == KeyEvent.KEYCODE_ASSIST
@@ -155,8 +166,8 @@ public class MainActivity extends Activity {
         if (intent.hasCategory(Intent.CATEGORY_HOME)) { isHome = true; web.evaluateJavascript("window.tvHome && tvHome()", null); }
     }
 
-    @Override protected void onResume() { super.onResume(); web.onResume(); web.requestFocus(); }
-    @Override protected void onPause() { web.onPause(); super.onPause(); }
+    @Override protected void onResume() { super.onResume(); showing = this; web.onResume(); web.requestFocus(); }
+    @Override protected void onPause() { if (showing == this) showing = null; web.onPause(); super.onPause(); }
     @Override protected void onDestroy() { voice.destroy(); web.destroy(); super.onDestroy(); }
 
     /** Push the active theme into the page. */

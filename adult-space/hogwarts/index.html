@@ -364,8 +364,13 @@ const LOGOS = {
   "playstation":                       { f: "ps5",        w: 101, dh: 79,  perch: 0.032 },      // an HDMI port with a PlayStation on it
   "com.google.android.youtube.tv":     { f: "youtube",    w: 86,  dh: 61,  perch: 0.026 },
   "com.apple.atve.androidtv.appletv":  { f: "appletv",    h: 87,  dh: 87,  perch: 0.062 },
+  // Pantheon: drawn from each app's own TV banner (personal builds only, like the logos above)
+  "ca.bellmedia.cravetv":              { f: "crave",      w: 196, dh: 34,  perch: 0.04 },
+  "com.disney.disneyplus":             { f: "disneyplus", h: 98,  dh: 98,  perch: 0.03 },       // the owl stands on the arc
 };
-const logoFor = e => LOGOS[e.pkg] || (e.pkg.startsWith("input:") && /playstation|\bps[345]\b/i.test(e.pkg + " " + e.label) ? LOGOS.playstation : null);
+const NO_LOGO = new Set();                                     // logo files that failed to load: those apps get their name
+function logoMissing(f) { if (NO_LOGO.has(f)) return; NO_LOGO.add(f); buildDock(); }
+const logoFor = e => (LOGOS[e.pkg] && !NO_LOGO.has(LOGOS[e.pkg].f) ? LOGOS[e.pkg] : null) || (e.pkg.startsWith("input:") && /playstation|\bps[345]\b/i.test(e.pkg + " " + e.label) ? LOGOS.playstation : null);
 const CELL = 292;
 let DOCK_X = 84, APPS = [], cells = [];
 const dock = $("#dock");
@@ -382,7 +387,7 @@ function buildDock() {
   cells = APPS.map((a, i) => {
     const c = document.createElement("div");
     c.className = "cell" + (a.f ? "" : " word");
-    c.innerHTML = a.f ? `<div class="logo"><img src="img/logos/warm/icon_${a.f}.png" alt="" style="${a.h ? "height:" + a.h : "width:" + a.w}px"></div><div class="name">${esc(a.n)}</div>`
+    c.innerHTML = a.f ? `<div class="logo"><img src="img/logos/warm/icon_${a.f}.png" alt="" onerror="logoMissing('${a.f}')" style="${a.h ? "height:" + a.h : "width:" + a.w}px"></div><div class="name">${esc(a.n)}</div>`
                       : `<div class="logo"><span style="font-size:${a.size}px">${esc(a.n)}</span></div>`;
     if (!TVMODE) c.addEventListener("click", () => (app === i ? openApp() : focusApp(i)));
     dock.appendChild(c);

@@ -68,12 +68,21 @@ The release build offers itself as a home screen. Choose it when you press Home,
 | Plain-http allow-list | `res/xml/network_security_config.xml` (only the agent's host) |
 | Request | `POST {"prompt", "source":"voice", "space":"adult", "theme", "device", "ts"}` |
 | Response | logged in full. Shown on screen if JSON with `reply`/`text`/`message`, or as plain text |
-| Logs | `adb logcat -s Pantheon/Agent Pantheon/Voice Pantheon/Keys` |
+| Logs | `adb logcat -s Pantheon/Agent Pantheon/Voice Pantheon/Assist Pantheon/Keys` |
 
 Ways to start listening:
 
-1. **The remote's mic / Assistant button.** Google TV often keeps this button for Google Assistant. If nothing
-   happens, run `adb logcat -s Pantheon/Keys` and press it to see whether the app receives it.
+1. **The remote's mic / Assistant button.** Google TV gives this button to the system assistant (Google Assistant),
+   so Pantheon registers as an assistant too (`assist/`). Hand it the button, and give it back, with:
+
+   ```bash
+   scripts/assistant.sh pantheon     # mic button -> Pantheon, everywhere on the TV
+   scripts/assistant.sh google       # mic button -> Google Assistant again
+   ```
+
+   With Pantheon on screen, the castle listens and shows the banner. Over another app, a small listener opens
+   and shows the reply as a toast. Speech-to-text is still Google's: Pantheon forwards it, so voice typing elsewhere
+   keeps working.
 2. **The mic icon.** From the dock press **Up** to reach the top-right icons, **Left** to the mic, then **OK**.
 3. The search key, or a remote's bookmark/star key, if it sends one.
 

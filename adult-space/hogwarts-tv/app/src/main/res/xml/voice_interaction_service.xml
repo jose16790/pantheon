@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pantheon as the TV's assistant (assist/). The recognizer forwards to Google's, see PantheonRecognitionService. -->
+<voice-interaction-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:sessionService="dev.pantheon.adultspace.assist.PantheonSessionService"
+    android:recognitionService="dev.pantheon.adultspace.assist.PantheonRecognitionService"
+    android:supportsAssist="true" />

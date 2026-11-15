@@ -53,6 +53,36 @@
             </intent-filter>
         </activity>
 
+        <!-- Pantheon as the TV's assistant: holds android.app.role.ASSISTANT so the remote's mic button comes here.
+             Taken with: adb shell cmd role add-role-holder android.app.role.ASSISTANT dev.pantheon.adultspace -->
+        <service
+            android:name=".assist.PantheonVoiceInteractionService"
+            android:exported="true"
+            android:permission="android.permission.BIND_VOICE_INTERACTION">
+            <meta-data android:name="android.voice_interaction" android:resource="@xml/voice_interaction_service" />
+            <intent-filter>
+                <action android:name="android.service.voice.VoiceInteractionService" />
+            </intent-filter>
+        </service>
+        <service
+            android:name=".assist.PantheonSessionService"
+            android:exported="true"
+            android:permission="android.permission.BIND_VOICE_INTERACTION" />
+        <service
+            android:name=".assist.PantheonRecognitionService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.speech.RecognitionService" />
+            </intent-filter>
+        </service>
+        <!-- the mic button over another app: listens, sends, shows the reply as a toast -->
+        <activity
+            android:name=".assist.ListenActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
         <!-- The home-screen entry, off by default so it never competes with the current launcher. -->
         <activity-alias
             android:name=".HomeAlias"
