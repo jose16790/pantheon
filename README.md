@@ -72,7 +72,7 @@ Everything else (themes, voice commands, the sleep timer, your own music, testin
 
 ## Project
 
-[Fork it](CONTRIBUTING.md) · [Security](SECURITY.md) · [Changelog](CHANGELOG.md) · [Notices](NOTICE.md)
+[Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Changelog](CHANGELOG.md) · [Notices](NOTICE.md)
 
 Pantheon and its Game of Thrones theme are designed and built by **Jose** ([jose16790](https://github.com/jose16790)).
 The Hogwarts theme and the home-screen base come from [hogwarts-tv-home](https://github.com/ikevinadams/hogwarts-tv-home)
