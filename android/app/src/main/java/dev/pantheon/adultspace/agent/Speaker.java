@@ -73,6 +73,7 @@ final class Speaker {
             if (lines == null || lines.length() == 0) return null;
             JSONObject l = lines.getJSONObject(rnd.nextInt(lines.length()));
             final int my = ++turn;
+            line(my, l.optString("text"));
             main.post(() -> {
                 try {
                     AssetFileDescriptor fd = ctx.getAssets().openFd("www/themes/" + theme + "/voice/" + l.getString("file"));
@@ -87,6 +88,7 @@ final class Speaker {
     void say(String theme, String text) {
         if (text == null || text.trim().isEmpty()) return;
         final int my = ++turn;
+        line(my, text);
         String key = Keys.elevenLabs(ctx);
         if (key.isEmpty()) { main.post(() -> fallback(my, text)); return; }
         pool.execute(() -> {
@@ -118,7 +120,7 @@ final class Speaker {
             src.set(mp);
             mp.setOnCompletionListener(m -> { if (m == player) release(); });
             mp.setOnErrorListener((m, w, x) -> { if (m == player) release(); return true; });
-            mp.setOnPreparedListener(m -> { duck(true); m.start(); });
+            mp.setOnPreparedListener(m -> { duck(true); m.start(); speaking(my, m.getDuration()); });
             mp.prepareAsync();
         } catch (Exception e) { Log.w(Agent.TAG, "play failed: " + e.getMessage()); release(); }
     }
@@ -132,10 +134,20 @@ final class Speaker {
         if (my != turn || !ttsReady) return;
         release();
         tts.speak(plain(text), TextToSpeech.QUEUE_FLUSH, null, "pantheon-" + my);
+        speaking(my, plain(text).length() * 70);                            // the TV's voice: about 14 characters a second
     }
 
     /** The words alone, without the performance cues: for the screen and the TV's own voice. */
     static String plain(String s) { return s == null ? "" : s.replaceAll("\\[[^\\]]{1,30}\\]\\s*", "").replaceAll("\\s{2,}", " ").trim(); }
+
+    /** The page's conversation scroll: what the voice is about to say (its words appear as it speaks them). */
+    private void line(int id, String text) {
+        main.post(() -> js.accept("window.pantheonHand && pantheonHand(" + id + "," + JSONObject.quote(plain(text)) + ")"));
+    }
+
+    private void speaking(int id, int ms) {
+        main.post(() -> js.accept("window.pantheonSpeaking && pantheonSpeaking(" + id + "," + Math.max(600, ms) + ")"));
+    }
 
     private void duck(boolean on) { main.post(() -> js.accept("window.pantheonAudio && pantheonAudio.duck && pantheonAudio.duck(" + on + ")")); }
 

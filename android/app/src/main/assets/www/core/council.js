@@ -106,12 +106,12 @@
       this.el.querySelector(".lab.like").textContent = w.like;
       this.el.querySelector(".ask").textContent = w.ask;
       this.input.value = this.st.like || "";
-      this.open = true; this.el.classList.add("open");
+      this.open = true; this.el.classList.add("open"); document.body.classList.add("council-open");
       if (!this.picks.length && !this.busy) this.message(w.none, false);
       this.render();
     },
     close() {
-      this.open = false; if (this.el) this.el.classList.remove("open");
+      this.open = false; if (this.el) this.el.classList.remove("open"); document.body.classList.remove("council-open");
       if (this.input) this.input.blur();
       try { localStorage.setItem("pantheon_council", JSON.stringify(this.st)); } catch (e) { }
     },
