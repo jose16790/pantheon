@@ -31,7 +31,20 @@ public final class HomeWatch extends AccessibilityService {
             "com.google.android.apps.tv.launcherx.home.HomeActivity", "com.google.android.tvlauncher.MainActivity" };
     private long last, homePressed;
 
-    @Override protected void onServiceConnected() { Log.i(TAG, "on: Google's home will hand over to Pantheon"); }
+    @Override protected void onServiceConnected() {
+        Log.i(TAG, "on: Google's home will hand over to Pantheon");
+        if (HomeGuard.consumeKick(this) && !CrashGuard.standingAside(this)) bringPantheon();   // just put back: Google's home is likely showing
+    }
+
+    private void bringPantheon() {
+        try {
+            startActivity(new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+                    .setComponent(new ComponentName(getPackageName(), getPackageName() + ".HomeAlias"))
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED));
+        } catch (RuntimeException ex) {
+            Log.e(TAG, "couldn't bring Pantheon back: " + ex);
+        }
+    }
 
     @Override public void onAccessibilityEvent(AccessibilityEvent e) {
         if (e.getEventType() != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED || e.getPackageName() == null) return;
@@ -49,13 +62,7 @@ public final class HomeWatch extends AccessibilityService {
         if (now - last < 1500) return;                       // one hand-over per Home press
         last = now;
         Log.i(TAG, "Google's home came forward (" + e.getClassName() + "): back to Pantheon");
-        try {
-            startActivity(new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
-                    .setComponent(new ComponentName(getPackageName(), getPackageName() + ".HomeAlias"))
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED));
-        } catch (RuntimeException ex) {
-            Log.e(TAG, "couldn't bring Pantheon back: " + ex);
-        }
+        bringPantheon();
     }
 
     /** Notes a short press of Home (not a hold, which opens the dashboard). Never blocks the key. */

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-feature android:name="android.software.leanback" android:required="false" />
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
@@ -9,6 +10,10 @@
          (the system voice screen, tried first, records on its own). -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- Pantheon: the Home watch puts itself back if Android switches it off (home/HomeGuard.java). WRITE_SECURE_SETTINGS
+         is only ever granted by adb (scripts/home.sh), never by the user's taps. -->
+    <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS" tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <queries>
         <intent>
@@ -66,6 +71,13 @@
             </intent-filter>
             <meta-data android:name="android.accessibilityservice" android:resource="@xml/home_watch" />
         </service>
+
+        <receiver android:name=".home.BootReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
 
         <!-- Pantheon as the TV's assistant: holds android.app.role.ASSISTANT so the remote's mic button comes here.
              Taken with: adb shell cmd role add-role-holder android.app.role.ASSISTANT dev.pantheon.adultspace -->

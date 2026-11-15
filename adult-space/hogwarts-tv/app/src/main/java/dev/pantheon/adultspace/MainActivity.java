@@ -103,6 +103,9 @@ public class MainActivity extends Activity {
         String asked = getIntent().getStringExtra("theme");               // adb shell am start ... --es theme got
         if (asked != null) themes.set(asked);
         getWindow().getDecorView().setBackgroundColor(themes.current().windowBackground());
+        if (getIntent().hasExtra("pantheon_home_mode"))                        // scripts/home.sh apply / undo
+            dev.pantheon.adultspace.home.HomeGuard.setHomeMode(this, getIntent().getBooleanExtra("pantheon_home_mode", false));
+        dev.pantheon.adultspace.home.HomeGuard.ensure(this, "Pantheon opened");
         String agentAsked = getIntent().getStringExtra("agent_url");           // adb shell am start ... --es agent_url http://...
         if (agentAsked != null) AgentConfig.set(this, agentAsked);
         voice = new VoiceAgent(this, new AgentClient(() -> AgentConfig.url(this)), () -> themes.current().id(),
@@ -167,6 +170,9 @@ public class MainActivity extends Activity {
     /** Home pressed while we're the home screen: back to the castle. */
     @Override protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
+        if (intent.hasExtra("pantheon_home_mode"))
+            dev.pantheon.adultspace.home.HomeGuard.setHomeMode(this, intent.getBooleanExtra("pantheon_home_mode", false));
+        dev.pantheon.adultspace.home.HomeGuard.ensure(this, "Pantheon opened");
         String asked = intent.getStringExtra("theme");
         if (asked != null && themes.set(asked)) applyTheme();
         String agentAsked = intent.getStringExtra("agent_url");

@@ -94,6 +94,11 @@ Pantheon's top row (Up from the dock): **Wi-Fi**, **TV settings**, **Ask** (voic
 Google TV / Play Movies shop, Play Games, Gallery and TalkBack. It refuses anything the TV needs: the homes, the
 setup app, Play Services, the Play Store, the remote, Bluetooth, voice, the keyboard, HDMI and Wi-Fi.
 
+Android silently switches an app's accessibility service off when the app is force-stopped, which would let the
+TV wake to Google's home. So `home.sh apply` also lets Pantheon repair its own watch (it grants the one permission
+that needs, `WRITE_SECURE_SETTINGS`, which only adb can grant): Pantheon checks the watch at boot, after an update,
+when it opens, and, while it's your assistant, every time the screen turns on (`home/HomeGuard.java`).
+
 Note: wireless debugging switches itself off when the TV restarts. Turn it back on in Developer options (the
 Mac stays paired).
 
