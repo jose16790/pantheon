@@ -21,7 +21,8 @@ behind the remote's microphone. Designed and built by **Jose** ([jose16790](http
   agentic remote in [couch-tv](https://github.com/Seagey/couch-tv) by **Seagey**.
 - **Theme picker:** the crown in the top row switches the whole home, or just say "switch to Hogwarts".
 - **Where you are:** the place, temperature and weather under the clock, wherever the TV is.
-- **Headlines:** the top national, world and business stories for the TV's country, rotating through the top ten.
+- **Headlines:** the top national, world and finance stories for the TV's country, rotating through the top ten.
+  With the agent's key, Jev sorts every story into its row (so the Iron Bank shows only finance).
 - **One-command install** for friends, below.
 
 > Unofficial fan project. Not affiliated with Warner Bros., HBO, Marvel/Disney, Google or the app makers whose logos
