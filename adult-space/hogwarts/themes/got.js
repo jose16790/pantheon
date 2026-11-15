@@ -306,7 +306,7 @@
     Object.assign(shade.style, { position: "absolute", inset: "0", background: "#05070c", opacity: "0", pointerEvents: "none" });
     last.after(shade);
     // fog: two soft bands drifting across the floor and the steps (moved by CSS transforms: cheap on the TV)
-    const fog = [0, 1].map(i => {
+    const fog = [0, 1, 2].map(i => {                                           // the floor, nearer the floor, and mid-air
       const tile = noiseTile(256, 48, 13 + i * 31), c = document.createElement("canvas"); c.width = 1024; c.height = 140;
       const g = c.getContext("2d"); g.filter = "blur(6px)";
       g.drawImage(tile, 0, 0, 512, 140); g.drawImage(tile, 512, 0, 512, 140);
@@ -315,16 +315,28 @@
       const v = g.createLinearGradient(0, 0, 0, 140); v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(.45, "rgba(0,0,0,1)"); v.addColorStop(1, "rgba(0,0,0,0)");
       g.fillStyle = v; g.fillRect(0, 0, 1024, 140);
       const wrap = document.createElement("div");
-      Object.assign(wrap.style, { position: "absolute", left: "0", top: (i ? 590 : 470) + "px", width: "3870px", height: (i ? 300 : 230) + "px",
+      Object.assign(wrap.style, { position: "absolute", left: "0", top: [470, 590, 250][i] + "px", width: "3870px", height: [230, 300, 420][i] + "px",
                                   pointerEvents: "none", willChange: "transform", opacity: "0",
                                   backgroundImage: `url(${c.toDataURL()})`, backgroundSize: `1935px 100%`, backgroundRepeat: "repeat-x" });
-      shade.after(wrap); return { el: wrap, x: Math.random() * 1935, v: i ? 9 : 5 };
+      shade.after(wrap); return { el: wrap, x: Math.random() * 1935, v: [5, 9, 3][i], k: [1, 1, .55][i] };
     });
     // light shafts: a few long soft beams from the windows, angled by the sun (redrawn only when the sun moves)
     const rays = document.createElement("canvas"); rays.width = 480; rays.height = 270; rays.className = "gotrays";
     Object.assign(rays.style, { position: "absolute", left: "0", top: "0", width: "100%", height: "100%", opacity: "0", pointerEvents: "none" });
-    fog[1].el.after(rays);
-    return { layers, shade, fog, rays, rg: rays.getContext("2d"), rayAz: 999 };
+    fog[2].el.after(rays);
+    // dust in the sunlight: soft specks drifting slowly through the middle of the hall by day (CSS-moved: cheap)
+    const dust = document.createElement("div"); dust.className = "gotdust";
+    Object.assign(dust.style, { position: "absolute", inset: "0", pointerEvents: "none", opacity: "0", visibility: "hidden" });
+    rays.after(dust);
+    const motes = Array.from({ length: 46 }, () => {
+      const el = document.createElement("div"), r = 4 + Math.random() * 7;
+      Object.assign(el.style, { position: "absolute", left: "0", top: "0", width: r * 2 + "px", height: r * 2 + "px", borderRadius: "50%", willChange: "transform, opacity",
+                                background: "radial-gradient(circle, #fff6dc 0%, rgba(255,236,190,.8) 22%, rgba(255,222,160,.25) 50%, rgba(255,220,160,0) 72%)" });
+      dust.appendChild(el);
+      return { el, x: 420 + Math.random() * 1100, y: 110 + Math.random() * 820, vx: (Math.random() - .5) * 9, vy: -1.5 - Math.random() * 4,
+               ph: Math.random() * 7, tw: .5 + Math.random() * .5 };
+    });
+    return { layers, shade, fog, rays, dust, motes, rg: rays.getContext("2d"), rayAz: 999 };
   }
   function drawRoom(t, dt) {
     const R = room, w = sky && sky.wx; if (!R || !w) return;
@@ -339,9 +351,21 @@
     }
     R.storm = (R.storm || 0) + (storm * (.18 + .1 * L.night) - (R.storm || 0)) * Math.min(1, dt / 3);
     css(R.shade, "opacity", R.storm.toFixed(3));
-    const fogA = Math.min(.55, .16 + w.fog * .4 + storm * .06) * (L.day > .5 ? .8 : 1);
-    R.fog.forEach(f => { f.x = (f.x + dt * f.v * (1 + w.wind / 30)) % 1935;
-                         f.el.style.transform = `translate3d(${(-f.x).toFixed(1)}px,0,0)`; css(f.el, "opacity", fogA.toFixed(3)); });
+    // fog: a little, drifting through the hall at night (and in foggy or stormy weather); gone by day
+    const night = L.night + L.dawn * .6;
+    const fogA = Math.min(.6, .03 + .3 * night + w.fog * .4 + storm * .06);
+    R.fog.forEach(f => { const a = fogA * f.k; css(f.el, "visibility", a > .01 ? "visible" : "hidden"); if (a <= .01) return;
+                         f.x = (f.x + dt * f.v * (1 + w.wind / 30)) % 1935;
+                         f.el.style.transform = `translate3d(${(-f.x).toFixed(1)}px,0,0)`; css(f.el, "opacity", a.toFixed(3)); });
+    // dust in the light: morning to late afternoon, when the sun gets in
+    const dustA = Math.min(1, (L.day + L.golden) * 1.2) * (1 - .75 * cloudy) * (1 - storm * .8) * (w.sun.alt > 0 ? 1 : 0);
+    css(R.dust, "opacity", dustA.toFixed(3)); css(R.dust, "visibility", dustA > .01 ? "visible" : "hidden");
+    if (dustA > .01) for (const m of R.motes) {
+      m.ph += dt * .5; m.x += (m.vx + Math.sin(m.ph) * 4) * dt; m.y += (m.vy + Math.cos(m.ph * .7) * 2.5) * dt;
+      if (m.y < 90) { m.y = 940; m.x = 420 + Math.random() * 1100; } if (m.x < 380) m.x += 1180; if (m.x > 1560) m.x -= 1180;
+      m.el.style.transform = `translate3d(${m.x.toFixed(1)}px,${m.y.toFixed(1)}px,0)`;
+      m.el.style.opacity = (m.tw * (.55 + .45 * Math.sin(m.ph * 1.7))).toFixed(2);
+    }
     // shafts: only with the sun up and the sky not overcast
     const sunny = (L.day + L.golden) * (1 - cloudy) * Math.max(0, Math.min(1, w.sun.alt / 6));
     css(R.rays, "opacity", (sunny * (.55 + .1 * Math.sin(t * .4))).toFixed(3));
@@ -637,7 +661,7 @@
                 { perchDx: reach * big + GAP, perchY: () => ICON_Y + rise * big });
       sconces = makeSconces();
       sky = sky || makeSky(); sky.cv.style.display = sky.flash.style.display = "";
-      room = room || makeRoom(); room.layers.forEach(l => (l.im.style.display = "")); [room.shade, room.rays, ...room.fog.map(f => f.el)].forEach(e => (e.style.display = ""));
+      room = room || makeRoom(); room.layers.forEach(l => (l.im.style.display = "")); [room.shade, room.rays, room.dust, ...room.fog.map(f => f.el)].forEach(e => (e.style.display = ""));
       startAudio(); audio.on = true;
       jet = jet || makeJet();
       setFilms(seasons()); coverFallbacks();
@@ -651,7 +675,7 @@
       if (section === 2) section = 1;
       sconces.forEach(sc => sc.cv.remove()); sconces = [];
       if (sky) { sky.cv.style.display = sky.flash.style.display = "none"; }
-      if (room) { room.layers.forEach(l => (l.im.style.display = "none")); [room.shade, room.rays, ...room.fog.map(f => f.el)].forEach(e => (e.style.display = "none")); }
+      if (room) { room.layers.forEach(l => (l.im.style.display = "none")); [room.shade, room.rays, room.dust, ...room.fog.map(f => f.el)].forEach(e => (e.style.display = "none")); }
       audio.on = false; window.pantheonAudio.pause(); audio.paused = false;
       if (jet) { jet.cv.remove(); jet = null; }
       for (const i in roast) if (roast[i].el) roast[i].el.style.filter = "";

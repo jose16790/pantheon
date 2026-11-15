@@ -47,6 +47,8 @@
   #clock { position: absolute; left: 112px; top: 58px; color: var(--ink); text-shadow: 0 2px 18px rgba(0,0,0,.6); }
   #clock .t { font-size: 92px; line-height: 1; letter-spacing: .01em; }
   #clock .d { margin-top: 12px; font-size: 21px; letter-spacing: .28em; text-transform: uppercase; opacity: .72; padding-left: 4px; }
+  #clock .w { margin-top: 8px; font-size: 19px; letter-spacing: .22em; text-transform: uppercase; opacity: .62; padding-left: 4px; }
+  #clock .w:empty { display: none; }
   #topIcons { position: absolute; right: 112px; top: 92px; display: flex; gap: 56px; opacity: .78; }
   #topIcons svg { width: 40px; height: 40px; display: block; filter: drop-shadow(0 2px 8px rgba(0,0,0,.6)); transition: transform .2s; }
   #topIcons svg.focus { stroke: var(--gold-hi); transform: scale(1.3); filter: drop-shadow(0 0 10px rgba(255,190,120,.8)); }
@@ -234,7 +236,7 @@
       </div>
     </div>
     <div id="hshade"></div>
-    <div id="clock"><div class="t"></div><div class="d"></div></div>
+    <div id="clock"><div class="t"></div><div class="d"></div><div class="w"></div></div>
     <div id="topIcons"><div id="gearTip">Customise</div>
       <svg id="wifi" viewBox="0 0 24 24" fill="none" stroke="#f4ead6" stroke-width="1.6" stroke-linecap="round"><path d="M2.5 9a14 14 0 0 1 19 0M5.5 12.5a9.5 9.5 0 0 1 13 0M8.6 15.8a5 5 0 0 1 6.8 0"/><circle cx="12" cy="19" r="1" fill="#f4ead6"/></svg>
       <svg id="tvset" viewBox="0 0 24 24" fill="none" stroke="#f4ead6" stroke-width="1.6" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>
@@ -614,6 +616,12 @@ function clock() {
   const d = new Date();
   $("#clock .t").textContent = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }).replace(/\s?[AP]M/i, "");
   $("#clock .d").textContent = d.toLocaleDateString([], { weekday: "long", day: "numeric", month: "long" });
+  // Pantheon: where the TV is and the weather there (themes/weather.js), e.g. "Kitchener · 3°C · Light rain"
+  let w = null; try { w = window.PANTHEON_WX && PANTHEON_WX.now(); } catch (e) { }
+  const SAY = { clear: w && w.isDay ? "Sunny" : "Clear", partly: "Partly cloudy", overcast: "Overcast", fog: "Fog", drizzle: "Drizzle",
+                rain: "Rain", heavyrain: "Heavy rain", snow: "Snow", blizzard: "Blizzard", thunder: "Thunderstorm" };
+  $("#clock .w").textContent = w && w.place && w.place.city
+    ? [w.place.city, w.temp != null ? Math.round(w.temp) + "°C" : "", SAY[w.kind] || ""].filter(Boolean).join("  ·  ") : "";
 }
 clock(); setInterval(clock, 5000);
 
