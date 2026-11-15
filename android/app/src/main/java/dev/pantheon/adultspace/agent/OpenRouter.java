@@ -62,6 +62,7 @@ final class OpenRouter {
         String t = r.getJSONArray("choices").getJSONObject(0).getJSONObject("message").optString("content", "");
         return t.replaceAll(",?\\s*\\[[^\\]]*\\]\\((?:https?://)[^)]*\\)", "")       // [source](https://…) citations
                 .replaceAll("\\(?https?://\\S+\\)?", "")
+                .replaceAll("(?i)[,;]?\\s+(?:per|via|according to|from|source:?)\\s*(?=[.,;!?]|$)", "")   // "per [link]" leftovers
                 .replaceAll("[*_#`]", "").replaceAll("[\\s\\p{Z}\\u200B]+([.,!?;:])", "$1").replaceAll("\\s{2,}", " ").trim();
     }
 
