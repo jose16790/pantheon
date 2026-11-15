@@ -273,8 +273,9 @@
       if (age > .45) sk.bolt = null;
       else if (age < .1 || (age > .18 && age < .28)) {
         g.globalAlpha = .35; g.fillStyle = "#dfe8ff"; g.fillRect(0, 0, W, H);
-        g.globalAlpha = 1; g.strokeStyle = "#f4f7ff"; g.lineWidth = 1.6; g.shadowColor = "#a9c3ff"; g.shadowBlur = 8;
-        g.beginPath(); sk.bolt.pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.stroke(); g.shadowBlur = 0;
+        g.beginPath(); sk.bolt.pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y)));
+        g.globalAlpha = .3; g.strokeStyle = "#a9c3ff"; g.lineWidth = 6; g.stroke();         // its glow (no shadowBlur: slow on the TV)
+        g.globalAlpha = 1; g.strokeStyle = "#f4f7ff"; g.lineWidth = 1.6; g.stroke();
       }
     }
     const fa = sk.flashT ? Math.max(0, 1 - (t - sk.flashT) / .7) : 0;
@@ -356,17 +357,22 @@
   }
 
   // ---------------------------------------------------------------- sound: the fire, the music, and the weather outside
-  // Fire crackle (sounds/got/fire.mp3, from the torch footage) and music (sounds/got/music-local.mp3 if you put your
-  // own there, else the original sounds/got/music.mp3). Rain, wind and thunder are synthesised to fit the weather
+  // Fire crackle (sounds/got/fire.mp3, from the torch footage), looped by two players taking turns and cross-fading
+  // (the TV's player pauses for a moment each time it restarts a looping file). Music: your own track
+  // (sounds/got/music-local.mp3, see scripts/add-music.sh), if there is one, plays once each time you come to the
+  // home; then the original score (sounds/got/music.mp3) loops. Rain, wind and thunder are synthesised to fit the weather
   // (Web Audio: filtered noise), so they never loop audibly. Quiet by default; muted from the top row; silent
   // whenever an app is open (the TV app calls pause/resume).
-  const VOL = { fire: .36, music: .14, rain: .22, wind: .2, thunder: .55 };
+  const VOL = { fire: .16, music: .14, rain: .22, wind: .2, thunder: .55 };
   const audio = { on: false, muted: (() => { try { return localStorage.getItem("pantheon_mute") === "1"; } catch (e) { return false; } })(), paused: false };
   function startAudio() {
     if (audio.fire) return;
-    audio.fire = Object.assign(new Audio("sounds/got/fire.mp3"), { loop: true, volume: 0 });
-    audio.music = Object.assign(new Audio("sounds/got/music-local.mp3"), { loop: true, volume: 0 });
-    audio.music.onerror = () => { audio.music.onerror = null; audio.music.src = "sounds/got/music.mp3"; if (audio.on && !audio.paused) audio.music.play().catch(() => { }); };
+    audio.fire = [0, 1].map(() => Object.assign(new Audio("sounds/got/fire.mp3"), { volume: 0 }));
+    audio.cur = 0; audio.fireLvl = 0; audio.musicLvl = 0; audio.theme = true;
+    audio.music = Object.assign(new Audio(), { volume: 0 });
+    audio.music.onended = () => { if (!audio.music.loop) toScore(); };      // your theme played through: on to the score
+    audio.music.onerror = () => { if (audio.theme) toScore(); };           // no theme of your own
+    playTheme();
     try {
       const AC = window.AudioContext || window.webkitAudioContext, ac = audio.ac = new AC();
       const n = ac.createBuffer(1, ac.sampleRate * 3, ac.sampleRate), d = n.getChannelData(0);
@@ -385,6 +391,11 @@
       const wf = audio.windF = ac.createBiquadFilter(); wf.type = "bandpass"; wf.frequency.value = 380; wf.Q.value = 1.4; src().connect(wf); wf.connect(audio.wind);
     } catch (e) { audio.ac = null; }
   }
+  function playTheme() { audio.theme = true; audio.music.loop = false; audio.music.src = "sounds/got/music-local.mp3"; }
+  function toScore() {
+    audio.theme = false; audio.music.loop = true; audio.music.src = "sounds/got/music.mp3";
+    if (audio.on && !audio.paused && !audio.muted) audio.music.play().catch(() => { });
+  }
   function thunder() {
     if (!audio.ac || audio.muted || audio.paused || !audio.on) return;
     const ac = audio.ac, now = ac.currentTime, s = ac.createBufferSource(); s.buffer = audio.noise;
@@ -397,9 +408,20 @@
   function mixAudio(t, dt) {
     if (!audio.fire) return;
     const live = audio.on && !audio.muted && !audio.paused, w = sky && sky.wx, k = Math.min(1, dt * 1.5);
-    for (const [el, v] of [[audio.fire, VOL.fire], [audio.music, VOL.music]]) {
-      const target = live ? v : 0; el.volume = Math.max(0, Math.min(1, el.volume + (target - el.volume) * k));
-      if (live && el.paused) el.play().catch(() => { }); else if (!live && !el.paused && el.volume < .01) el.pause();
+    audio.fireLvl += ((live ? VOL.fire : 0) - audio.fireLvl) * k;
+    audio.musicLvl += ((live ? VOL.music : 0) - audio.musicLvl) * k;
+    const m = audio.music; m.volume = Math.max(0, Math.min(1, audio.musicLvl));
+    if (live && m.paused && m.src) m.play().catch(() => { }); else if (!live && !m.paused && audio.musicLvl < .01) m.pause();
+    // the crackle: as the playing copy nears its end, the other starts from the top; each fades in and out by its position
+    const XF = .8, [a, b] = [audio.fire[audio.cur], audio.fire[1 - audio.cur]];
+    if (!live && audio.fireLvl < .01) audio.fire.forEach(f => f.paused || f.pause());
+    else {
+      if (a.paused && (!a.duration || a.currentTime < a.duration - .05)) a.play().catch(() => { });
+      if (a.duration && a.currentTime > a.duration - XF && b.paused) { b.currentTime = 0; b.play().catch(() => { }); audio.cur = 1 - audio.cur; }
+      for (const f of audio.fire) {
+        const d = f.duration || 5, fw = f.paused ? 0 : Math.max(0, Math.min(1, f.currentTime / XF, (d - f.currentTime) / XF));
+        f.volume = Math.max(0, Math.min(1, audio.fireLvl * fw));
+      }
     }
     if (audio.ac && w) {
       if (live && audio.ac.state === "suspended") audio.ac.resume();
@@ -411,11 +433,14 @@
     }
   }
   window.pantheonAudio = {
-    pause() { audio.paused = true; [audio.fire, audio.music].forEach(a => a && a.pause()); if (audio.ac) audio.ac.suspend(); },
-    resume() { audio.paused = false; },
+    pause() { audio.paused = true; [...(audio.fire || []), audio.music].forEach(a => a && a.pause()); if (audio.ac) audio.ac.suspend(); },
+    resume() { audio.paused = false; if (audio.music) { audio.musicLvl = 0; playTheme(); } },   // back home: your theme again
     toggle() { audio.muted = !audio.muted; try { localStorage.setItem("pantheon_mute", audio.muted ? "1" : "0"); } catch (e) { }
                document.body.classList.toggle("muted", audio.muted); return !audio.muted; },
     thunder, get muted() { return audio.muted; },
+    get _music() { return audio.music; },                                  // (for testing)
+    get state() { return audio.fire && { music: audio.music.src.split("/").pop(), at: +audio.music.currentTime.toFixed(1), loop: audio.music.loop,
+                                         fire: audio.fire.map(f => f.paused ? "-" : `${f.currentTime.toFixed(2)}@${f.volume.toFixed(2)}`) }; },
   };
   document.addEventListener("DOMContentLoaded", () => document.body.classList.toggle("muted", audio.muted));
 

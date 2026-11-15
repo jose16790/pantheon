@@ -191,13 +191,13 @@ it works anywhere (Canada, India and so on) with no setup:
 - **Light from the sun**: the room moves through night, dawn, golden hour and day by the sun's real height. Light shafts
   slant with its direction, and the moon shows its real phase.
 - **Torches** burn live in all four sconces, and fog drifts across the floor.
-- **Sound**: crackling torches with a quiet original score, plus rain, wind and thunder to match the weather. Mute it with
+- **Sound**: crackling torches and a quiet original score, plus rain, wind and thunder to match the weather. Mute it with
   the speaker in the top row. The sound pauses when you open an app.
 
 Weather data: [Open-Meteo](https://open-meteo.com) (no key needed), refreshed every 15 minutes. The sun and moon are
 worked out on the TV.
 
-**Your own music.** To play a track you own in place of the built-in score (it stays on your machine and is never
+**Your own music.** To play a track you own each time you come home (once, then the built-in score loops) (it stays on your machine and is never
 committed), run:
 
 ```bash
