@@ -55,6 +55,9 @@ public final class Agent {
 
     private String theme() { return act.themeId(); }
 
+    /** Testing: start a fresh conversation (the facts it knows about you stay). */
+    public void forgetConversation() { pool.execute(memory::clearConversation); }
+
     /** A title was opened from Pantheon (the Council's cards, or by voice): remembered, so it isn't suggested again. */
     public void opened(String title) { pool.execute(() -> memory.opened(title)); }
 
@@ -216,7 +219,7 @@ public final class Agent {
         boolean detailed = DETAIL.matcher(text).find();
         String mem = memory.context(names()[0], names()[1]);
         String out = or.talk(Persona.of(theme(), detailed) + (mem.isEmpty() ? "" : "\n\n" + mem), ctx.toString(), true, detailed ? 420 : 180, 20000);
-        Log.i(TAG, "answer: " + Speaker.plain(out));
+        Log.i(TAG, "answer: " + out);
         speaker.say(theme(), out);
         ui(() -> say.state("reply", reply(Speaker.plain(out))));
         done(text, out);

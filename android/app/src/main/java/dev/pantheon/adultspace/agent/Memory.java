@@ -48,6 +48,8 @@ final class Memory {
         save("turns", tail(t, TURNS));
     }
 
+    synchronized void clearConversation() { prefs.edit().remove("turns").apply(); }
+
     /** The recent exchanges (the last 15 minutes) as plain lines, or "" if there are none. */
     synchronized String conversation(String you, String hand) {
         JSONArray t = list("turns");
