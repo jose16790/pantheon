@@ -23,7 +23,8 @@
   const WORDS = ["One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight"];
 
   let on = false, ready = false, sconces = [], fire = [], roast = {}, landedOn = -1, settled = 0, nextBreath = 0, sprites = null, covers = null;
-  let jet = null, sconceDt = 0;                                // jet: the fire-breath canvas (makeJet)
+  let jet = null, sconceDt = 0;
+  const ICON_Y = 853;                                           // the dock icons' middle (index.html: perchY, dsp)                                // jet: the fire-breath canvas (makeJet)
 
   // ---------------------------------------------------------------- the library: season books
   function drawCover(i) {
@@ -138,15 +139,17 @@
     const sh = SHEET.breath, act = owl.act, [f0, f1] = sh ? sh.fire : [0, 0];
     const live = act && act.k === "breath" && act.t > f0 && act.t < f1 + .25;
     if (!live || !jet.img.complete) { css(jet.cv, "visibility", "hidden"); return; }
-    // aimed through the icon and out past it, at the icon's height: the blast engulfs it rather than poking at it
-    const F = jet.F, [mx, my] = mouth(), tx = appX(owl.at) + 34, ty = 884;
+    // straight out of the jaws, level, through the icon and out past it on the far side: the blast engulfs it
+    const F = jet.F, [mx, my] = mouth(), tx = appX(owl.at) + owl.face * 90, ty = ICON_Y + 6;
     const ang = Math.atan2(ty - my, tx - mx), dist = Math.hypot(tx - mx, ty - my);
     const grow = clamp((act.t - f0) / .32, 0, 1), die = clamp((f1 + .25 - act.t) / .35, 0, 1);
-    const full = Math.max(250, dist + 30), len = full * ease(grow);
+    const full = Math.max(240, dist + 40), len = full * ease(grow);
     const k = full / F.w;                                        // the footage's length, scaled to the blast
     css(jet.cv, "visibility", "visible");
     jet.cv.style.opacity = (Math.min(1, grow * 2) * die).toFixed(3);
-    jet.cv.style.transform = `translate3d(${mx.toFixed(1)}px, ${(my - F.srcY).toFixed(1)}px, 0) rotate(${ang.toFixed(3)}rad) scale(${k.toFixed(3)}, ${(k * 1.3).toFixed(3)})`;
+    // facing left the jet turns round: flip it top to bottom too, so it is mirrored rather than upside down
+    const flip = Math.abs(ang) > Math.PI / 2 ? -1 : 1;
+    jet.cv.style.transform = `translate3d(${mx.toFixed(1)}px, ${(my - F.srcY).toFixed(1)}px, 0) rotate(${ang.toFixed(3)}rad) scale(${k.toFixed(3)}, ${(flip * k * 1.3).toFixed(3)})`;
     const f = Math.floor(t * F.fps) % F.n;
     if (f === jet.last && grow >= 1) return;
     jet.last = f;
@@ -267,11 +270,12 @@
       document.body.dataset.nogarden = "1";
       const D = window.DRAGON_SHEETS, b = D.breath;
       const [f0, f1] = b.fire, mid = Math.floor((f0 + f1) / 2 * b.fps);
-      // stand beside the app, so the jaws (thrust forward while breathing) end up just short of its middle
-      const reach = b.mouth[mid][0] - b.footX;
+      // stand beside the app, low on the floor in front of the dock, so that at full lunge the open jaws are level
+      // with the icon's middle and GAP px to its side: the fire then leaves the mouth level, the way the head points
+      const reach = b.mouth[mid][0] - b.footX, rise = b.footY - b.mouth[mid][1], GAP = 80;
       const big = 1.12;                                     // a touch bigger than its sheets, to read from the sofa
       useMascot(D, D.idle.h * big, { up: D.hop.up, down: D.hop.down, end: D.hop.end, rate: 1.6 },
-                { perchDx: reach * big + 18, perchY: i => 853 + APPS[i].dh * cells[i].s.x * 0.5 + 8 });   // its feet on the dock, by the icon
+                { perchDx: reach * big + GAP, perchY: () => ICON_Y + rise * big });
       sconces = makeSconces();
       jet = jet || makeJet();
       setFilms(seasons()); coverFallbacks();
