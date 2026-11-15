@@ -43,3 +43,6 @@ home/themes/got/dragon/src/*.mp4
 home/themes/got/sounds/music-local.*
 android/app/src/main/assets/www/themes/got/sounds/music-local.*
 voice-samples/
+
+# launch videos made with /brag (local)
+brag-output*/
