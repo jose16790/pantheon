@@ -4,7 +4,6 @@
 
 - **The Ledger:** what the agent remembers about you, on screen (top-row book icon, or ask "what do you know about
   me?"). Strike out a fact, forget what you've watched, or forget everything.
-- The repository is fork-only: it doesn't take pull requests (see CONTRIBUTING.md).
 
 ## 1.0.0 · 2026-11-15
 
