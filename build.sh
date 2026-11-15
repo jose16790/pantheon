@@ -46,6 +46,10 @@ cp "$G/dragon/"*.webp "$G/dragon/"*.js "$GW/dragon/"
 cp "$G/img/covers/"*.jpg "$GW/img/covers/"
 cp "$G/img/glass.png" "$G/img/clouds_"*.webp "$G/img/torch".* "$GW/img/"
 cp "$G/sounds/"*.mp3 "$G/sounds/"*.js "$GW/sounds/"            # fire, music (and your own: scripts/add-music.sh)
+# every theme's recorded voice lines (home/tools/voice_lines.py): the agent plays them while it works
+for d in "$HOME_DIR/themes/"*/voice; do
+  [ -d "$d" ] || continue; t="$(basename "$(dirname "$d")")"; mkdir -p "$WWW/themes/$t/voice"; cp "$d/"* "$WWW/themes/$t/voice/"
+done
 
 (cd "$ROOT/android" && ./gradlew assembleRelease --console=plain -q)
 APK="$ROOT/android/app/build/outputs/apk/release/app-release.apk"

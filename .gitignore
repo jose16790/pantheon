@@ -42,3 +42,4 @@ home/themes/got/dragon/src/*.mp4
 # your own music for the Game of Thrones theme (scripts/add-music.sh): local only, never committed
 home/themes/got/sounds/music-local.*
 android/app/src/main/assets/www/themes/got/sounds/music-local.*
+voice-samples/

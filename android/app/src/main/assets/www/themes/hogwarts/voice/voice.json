@@ -1,0 +1,58 @@
+{
+ "voice": "htZQqY7WtacRNV7s62Iy",
+ "model": "eleven_v3",
+ "lines": {
+  "ack": [
+   {
+    "text": "Certainly, my dear.",
+    "file": "ack_1.mp3"
+   },
+   {
+    "text": "[chuckles] Consider it done.",
+    "file": "ack_2.mp3"
+   },
+   {
+    "text": "Right away.",
+    "file": "ack_3.mp3"
+   },
+   {
+    "text": "As you wish, my dear.",
+    "file": "ack_4.mp3"
+   }
+  ],
+  "think": [
+   {
+    "text": "Let me consult the library, my dear.",
+    "file": "think_1.mp3"
+   },
+   {
+    "text": "[chuckles] One moment. The owls are on their way.",
+    "file": "think_2.mp3"
+   },
+   {
+    "text": "Hmm. [clears throat] Let me think.",
+    "file": "think_3.mp3"
+   }
+  ],
+  "council": [
+   {
+    "text": "Let us ask the Sorting Hat, shall we?",
+    "file": "council_1.mp3"
+   },
+   {
+    "text": "[chuckles] The Hat is pondering, my dear.",
+    "file": "council_2.mp3"
+   }
+  ],
+  "sorry": [
+   {
+    "text": "[sighs] Oh dear. The owls have not returned.",
+    "file": "sorry_1.mp3"
+   },
+   {
+    "text": "I'm afraid I couldn't find that, my dear.",
+    "file": "sorry_2.mp3"
+   }
+  ]
+ }
+}

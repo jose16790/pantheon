@@ -134,12 +134,16 @@ public final class VoiceAgent {
                 .putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
     }
 
+    /** Words as if heard by the mic (adb testing: --es ask "…"). */
+    public void handleText(String text) { if (text != null && !text.trim().isEmpty()) handle(text); }
+
     private void handle(String text) {
         String prompt = text.trim();
         Log.i(TAG, "heard: \"" + prompt + "\"");
         // Simple commands (open an app, pause, volume...) are done right here on the TV: no agent needed.
         String local = LocalCommands.tryRun(act, prompt);
         if (local != null) {
+            if (brain != null && brain.ready()) brain.ack();             // "At once, Your Grace." (a recorded line)
             state("reply", org.json.JSONObject.quote(local).replaceFirst("^", "{\"reply\":") + "}");
             return;
         }

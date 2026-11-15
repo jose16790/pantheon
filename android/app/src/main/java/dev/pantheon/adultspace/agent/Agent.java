@@ -39,17 +39,25 @@ public final class Agent {
     private final Tmdb tmdb;
     private final OpenRouter or;
     private final Council council;
+    private final Speaker speaker;
     private int request;                                       // the newest council request; older answers are dropped
+    private long voiceCouncilAt;                               // when a Council request last came by voice (its picks are announced)
 
     public Agent(MainActivity act, Consumer<String> js) {
         this.act = act; this.js = js;
         tmdb = new Tmdb(act); or = new OpenRouter(act);
         council = new Council(act, tmdb, or, pool);
+        speaker = new Speaker(act, pool, js);
     }
+
+    private String theme() { return act.themeId(); }
+
+    /** A quick spoken "at once" for the commands the TV runs by itself (a recorded line: instant, free). */
+    public void ack() { speaker.stock(theme(), "ack"); }
 
     public boolean ready() { return Keys.ready(act); }
 
-    public void shutdown() { pool.shutdownNow(); }
+    public void shutdown() { speaker.shutdown(); pool.shutdownNow(); }
 
     // ---------------------------------------------------------------- the agentic remote
     /** A request from the remote's panel: {minutes, episode, genres, like, kind}. Answers come back to the page. */
@@ -60,9 +68,21 @@ public final class Agent {
             try { req = new JSONObject(json); } catch (Exception e) { req = new JSONObject(); }
             if (!ready()) { toPage(id, "onError", JSONObject.quote("The agent has no keys yet. Run scripts/agent-keys.sh on your computer.")); return; }
             council.recommend(req, new Council.Listener() {
-                @Override public void picks(JSONObject r) { toPage(id, "onPicks", r.toString()); }
+                @Override public void picks(JSONObject r) {
+                    toPage(id, "onPicks", r.toString());
+                    if (System.currentTimeMillis() - voiceCouncilAt < 30_000) {      // you asked by voice: the Hand announces them
+                        voiceCouncilAt = 0;
+                        JSONArray p = r.optJSONArray("picks");
+                        if (p != null && p.length() > 0)
+                            speaker.say(theme(), Persona.picks(theme(), p.optJSONObject(0).optString("title"),
+                                    p.length() > 1 ? p.optJSONObject(1).optString("title") : null, p.length() > 2 ? p.optJSONObject(2).optString("title") : null));
+                    }
+                }
                 @Override public void reasons(JSONObject r) { toPage(id, "onReasons", r.toString()); }
-                @Override public void error(String m) { toPage(id, "onError", JSONObject.quote(m)); }
+                @Override public void error(String m) {
+                    toPage(id, "onError", JSONObject.quote(m));
+                    if (System.currentTimeMillis() - voiceCouncilAt < 30_000) { voiceCouncilAt = 0; speaker.stock(theme(), "sorry"); }
+                }
             });
         });
     }
@@ -97,14 +117,17 @@ public final class Agent {
             } catch (Exception e) { Log.w(TAG, "Jev route failed: " + e.getMessage()); }
             try {
                 switch (route) {
-                    case "recommend":  ui(() -> { js.accept("window.pantheonCouncil && pantheonCouncil.fromVoice(" + JSONObject.quote(text) + ")");
-                                                  say.state("reply", reply("Asking the council…")); }); break;
+                    case "recommend":  voiceCouncilAt = System.currentTimeMillis();
+                                       String said = speaker.stock(theme(), "council");
+                                       ui(() -> { js.accept("window.pantheonCouncil && pantheonCouncil.fromVoice(" + JSONObject.quote(text) + ")");
+                                                  say.state("reply", reply(said != null ? Speaker.plain(said) : "Asking the council…")); }); break;
                     case "play_title": playTitle(text, say); break;
                     case "question":   answer(text, say); break;
                     default:           control(text, say);
                 }
             } catch (Exception e) {
                 Log.w(TAG, "voice failed: " + e);
+                speaker.stock(theme(), "sorry");
                 ui(() -> say.state("error", "The Ravens didn't return. Check the TV's internet."));
             }
         });
@@ -131,6 +154,7 @@ public final class Agent {
                     int id = ps.getJSONObject(j).getInt("provider_id");
                     if (!svc.pkgFor.containsKey(id)) continue;
                     String pkg = svc.pkgFor.get(id), service = svc.nameFor.get(id);
+                    speaker.stock(theme(), "ack");
                     ui(() -> { act.openTitle(pkg, name); say.state("reply", reply("Opening " + name + " on " + service)); });
                     return;
                 }
@@ -143,10 +167,52 @@ public final class Agent {
         ui(() -> { act.openTitle(null, title); say.state("reply", reply("Searching for " + title)); });
     }
 
+    private static final java.util.regex.Pattern NEWSY = java.util.regex.Pattern.compile(
+            "(?i)\\b(news|headlines?|happening|going on|world|today'?s|latest|markets?|stocks?)\\b");
+    private static final java.util.regex.Pattern FLIGHTS = java.util.regex.Pattern.compile(
+            "(?i)\\b(flights?|delays?|delayed|airports?|ground stop|faa)\\b");
+
+    /** A question: a recorded "one moment" at once, then the persona's answer from live sources, spoken and shown. */
     private void answer(String text, Say say) throws Exception {
-        JSONObject a = or.json("You are the voice of a TV home screen. Answer the viewer's question in at most two short "
-                + "sentences, plainly. If you don't know, say so. Reply with JSON only: {\"reply\": \"…\"}", text, 160, 8000);
-        ui(() -> say.state("reply", a.toString()));
+        speaker.stock(theme(), "think");
+        StringBuilder ctx = new StringBuilder("The viewer asks: ").append(text).append("\nLocal time: ")
+                .append(new java.text.SimpleDateFormat("EEEE d MMMM yyyy, h:mm a", Locale.UK).format(new java.util.Date()))
+                .append(". The TV is in ").append(dev.pantheon.adultspace.weather.Weather.country(act)).append(".\n");
+        if (NEWSY.matcher(text).find()) ctx.append("\nToday's headlines (from Google News, for the TV's country):\n").append(headlines());
+        if (FLIGHTS.matcher(text).find()) ctx.append("\nLive US airport status from the FAA (only airports with delays are listed; "
+                + "an airport not listed has no reported delay):\n").append(faa());
+        String out = or.talk(Persona.of(theme()), ctx.toString(), true, 260, 20000);
+        Log.i(TAG, "answer: " + Speaker.plain(out));
+        speaker.say(theme(), out);
+        ui(() -> say.state("reply", reply(Speaker.plain(out))));
+    }
+
+    private String headlines() {
+        try {
+            JSONObject n = new JSONObject(act.getSharedPreferences("pantheon_news", android.content.Context.MODE_PRIVATE).getString("json", "{}"));
+            StringBuilder b = new StringBuilder();
+            for (String k : new String[] { "national", "world", "business" }) {
+                JSONArray a = n.optJSONArray(k);
+                for (int i = 0; a != null && i < Math.min(6, a.length()); i++)
+                    b.append("- [").append(k).append("] ").append(a.getJSONObject(i).optString("t")).append(" (").append(a.getJSONObject(i).optString("src")).append(")\n");
+            }
+            return b.length() == 0 ? "(none fetched yet)\n" : b.toString();
+        } catch (Exception e) { return "(unavailable)\n"; }
+    }
+
+    private String faa() {
+        try {
+            java.net.HttpURLConnection c = (java.net.HttpURLConnection) new java.net.URL("https://nasstatus.faa.gov/api/airport-status-information").openConnection();
+            c.setConnectTimeout(5000); c.setReadTimeout(6000);
+            String x;
+            try (java.io.InputStream in = c.getInputStream()) {
+                java.io.ByteArrayOutputStream b = new java.io.ByteArrayOutputStream(); byte[] buf = new byte[8192];
+                for (int n; (n = in.read(buf)) > 0; ) b.write(buf, 0, n);
+                x = b.toString("UTF-8");
+            }
+            finally { c.disconnect(); }
+            return x.replaceAll("<(Name|ARPT)>", "\n$0").replaceAll("<[^>]+>", " ").replaceAll("[ \t]+", " ").trim() + "\n";
+        } catch (Exception e) { return "(the FAA status feed didn't answer)\n"; }
     }
 
     private void control(String text, Say say) throws Exception {
@@ -155,7 +221,11 @@ public final class Agent {
                 + "{\"type\":\"launch\",\"app\":\"app name\"}, {\"type\":\"key\",\"key\":\"home|play_pause|play|pause|next|previous|volume_up|volume_down|mute\"}, "
                 + "{\"type\":\"volume\",\"percent\":0-100}, {\"type\":\"search\",\"query\":\"title\"}, {\"type\":\"theme\",\"id\":\"got|hogwarts|marvel\"}. "
                 + "Use no actions if none fit, and say so briefly in reply.", text, 200, 8000);
-        ui(() -> { Actions.run(act, a.toString()); say.state("reply", a.toString()); });
+        ui(() -> {
+            int done = Actions.run(act, a.toString());
+            if (done > 0) speaker.stock(theme(), "ack"); else speaker.say(theme(), a.optString("reply"));
+            say.state("reply", a.toString());
+        });
     }
 
     private static String reply(String s) {

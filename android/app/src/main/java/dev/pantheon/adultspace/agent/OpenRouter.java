@@ -46,6 +46,25 @@ final class OpenRouter {
         }
     }
 
+    /**
+     * A spoken answer in plain text. With web on, OpenRouter searches the web first (its "web" plugin: ~4 results, about
+     * a cent) and the model answers from what it found. Links and markdown are taken out: this is for the ear.
+     */
+    String talk(String system, String user, boolean web, int maxTokens, int timeoutMs) throws Exception {
+        JSONObject body = new JSONObject()
+                .put("model", CHAT).put("max_tokens", maxTokens).put("temperature", 0.6)
+                .put("reasoning", new JSONObject().put("enabled", false))
+                .put("messages", new JSONArray()
+                        .put(new JSONObject().put("role", "system").put("content", system))
+                        .put(new JSONObject().put("role", "user").put("content", user)));
+        if (web) body.put("plugins", new JSONArray().put(new JSONObject().put("id", "web").put("max_results", 4)));
+        JSONObject r = Http.post("https://openrouter.ai/api/v1/chat/completions", headers(), body, timeoutMs);
+        String t = r.getJSONArray("choices").getJSONObject(0).getJSONObject("message").optString("content", "");
+        return t.replaceAll(",?\\s*\\[[^\\]]*\\]\\((?:https?://)[^)]*\\)", "")       // [source](https://…) citations
+                .replaceAll("\\(?https?://\\S+\\)?", "")
+                .replaceAll("[*_#`]", "").replaceAll("[\\s\\u00A0\\u202F]+([.,!?;:])", "$1").replaceAll("\\s{2,}", " ").trim();
+    }
+
     private JSONObject chat(String model, String system, String user, int maxTokens, int timeoutMs) throws Exception {
         JSONObject body = new JSONObject()
                 .put("model", model)

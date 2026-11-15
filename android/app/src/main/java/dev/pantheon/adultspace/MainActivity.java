@@ -193,6 +193,8 @@ public class MainActivity extends Activity {
         if (agentAsked != null) AgentConfig.set(this, agentAsked);
         takeKeys(intent);
         // testing the agentic remote: adb shell am start ... --es council '{"minutes":45,"like":"like Severance"}'
+        String ask = intent.getStringExtra("ask");                       // testing the voice: as if said to the mic
+        if (ask != null) voice.handleText(ask);
         String council = intent.getStringExtra("council");
         if (council != null) {
             web.evaluateJavascript("window.pantheonCouncil && (pantheonCouncil.show(), pantheonCouncil.message(pantheonCouncil.el && '…', true))", null);
@@ -215,10 +217,11 @@ public class MainActivity extends Activity {
 
     /** The agent's keys, sent once by scripts/agent-keys.sh (never logged). */
     private void takeKeys(Intent i) {
-        String or = i.getStringExtra("openrouter_key"), tm = i.getStringExtra("tmdb_key");
-        if (or == null && tm == null) return;
-        dev.pantheon.adultspace.agent.Keys.set(this, or, tm);
-        i.removeExtra("openrouter_key"); i.removeExtra("tmdb_key");
+        String or = i.getStringExtra("openrouter_key"), tm = i.getStringExtra("tmdb_key"), el = i.getStringExtra("elevenlabs_key");
+        if (or == null && tm == null && el == null) return;
+        if (or != null || tm != null) dev.pantheon.adultspace.agent.Keys.set(this, or, tm);
+        if (el != null) dev.pantheon.adultspace.agent.Keys.setElevenLabs(this, el);
+        i.removeExtra("openrouter_key"); i.removeExtra("tmdb_key"); i.removeExtra("elevenlabs_key");
         Log.i(dev.pantheon.adultspace.agent.Agent.TAG, "keys updated; agent ready: " + dev.pantheon.adultspace.agent.Keys.ready(this));
     }
 
@@ -236,6 +239,9 @@ public class MainActivity extends Activity {
         if (start(new Intent("android.search.action.GLOBAL_SEARCH").putExtra(SearchManager.QUERY, title))) return;
         search(title, pkg);
     }
+
+    /** The active theme's id (got, hogwarts, marvel): the agent speaks in its character. */
+    public String themeId() { return themes.current().id(); }
 
     /** Switch theme (voice: "switch to Game of Thrones"). False for an unknown id. */
     public boolean switchTheme(String id) {

@@ -462,8 +462,9 @@
   function mixAudio(t, dt) {
     if (!audio.fire) return;
     const live = audio.on && !audio.muted && !audio.paused, w = sky && sky.wx, k = Math.min(1, dt * 1.5);
-    audio.fireLvl += ((live ? VOL.fire : 0) - audio.fireLvl) * k;
-    audio.musicLvl += ((live ? VOL.music : 0) - audio.musicLvl) * k;
+    const duck = audio.ducked ? .22 : 1;                                   // quieter while the Hand speaks
+    audio.fireLvl += ((live ? VOL.fire * duck : 0) - audio.fireLvl) * k;
+    audio.musicLvl += ((live ? VOL.music * duck : 0) - audio.musicLvl) * k;
     const m = audio.music; m.volume = Math.max(0, Math.min(1, audio.musicLvl));
     if (live && m.paused && m.src) m.play().catch(() => { }); else if (!live && !m.paused && audio.musicLvl < .01) m.pause();
     // the crackle: as the playing copy nears its end, the other starts from the top; each fades in and out by its position
@@ -493,6 +494,7 @@
     toggle() { audio.muted = !audio.muted; try { localStorage.setItem("pantheon_mute", audio.muted ? "1" : "0"); } catch (e) { }
                document.body.classList.toggle("muted", audio.muted); return !audio.muted; },
     thunder, get muted() { return audio.muted; },
+    duck(on) { audio.ducked = !!on; },                                     // the TV app, while a voice speaks
     get _music() { return audio.music; },                                  // (for testing)
     get state() { return audio.fire && { music: audio.music.src.split("/").pop(), at: +audio.music.currentTime.toFixed(1), loop: audio.music.loop,
                                          grains: audio.fireBuf ? +audio.fireBus.gain.value.toFixed(3) : "off", next: audio.nextGrain && +(audio.nextGrain - audio.ac.currentTime).toFixed(2),

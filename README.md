@@ -225,19 +225,36 @@ How it decides, all on the TV (`android/.../agent/`):
 | Score every candidate against your request in one call | **Jev 1.14**, TypeSafe's decision model (OpenRouter) | ~0.3 s |
 | One line on why each pick fits | **DeepSeek** | after the cards appear |
 
-Voice goes through the same agent: simple commands still run instantly on the TV; everything else is routed by Jev
-(what to watch → the Council; a named title → opened in the app that has it; TV control; questions → a short answer).
+### The Hand of the King (voice)
+
+Press the mic and ask anything. Simple commands still run instantly on the TV; everything else is routed by Jev:
+
+| You say | The Hand |
+|---|---|
+| "something light for 40 minutes", "like Severance but funnier" | summons the Small Council, then announces its picks |
+| "put on Paddington" | opens it in the app that has it |
+| "turn the volume to 15", "switch to Hogwarts" | does it |
+| "any flight delays from Atlanta today?" | answers from the FAA's live airport status |
+| "what's going on around the world?" | answers from today's headlines |
+| "tell me about NVIDIA's GR00T", anything else | searches the web, then answers |
+
+He answers in character (loyal, shrewd, dry; "Your Grace") in a deep, expressive voice: ElevenLabs v3, which
+performs the chuckles and sighs he writes in. Recorded lines ("At once, Your Grace.") play instantly while he works;
+live answers take a few seconds. In Hogwarts, the Headmaster's portrait speaks instead. Without an ElevenLabs key the
+TV's own voice reads the same words. Costs: a web answer is about a cent (OpenRouter); a spoken line uses one
+ElevenLabs credit per character (lines said before are cached). New recorded lines: `home/tools/voice_lines.py`.
 
 **Setup:** an [OpenRouter](https://openrouter.ai/keys) key (a few dollars of credit lasts months: a pick costs a small
-fraction of a cent) and a free [TMDB](https://www.themoviedb.org/settings/api) key. Then:
+fraction of a cent), a free [TMDB](https://www.themoviedb.org/settings/api) key and, for the Hand's voice, an
+[ElevenLabs](https://elevenlabs.io/app/settings/api-keys) key (optional). Then:
 
 ```bash
-./scripts/agent-keys.sh          # asks for both (hidden), checks them, sends them to the TV
+./scripts/agent-keys.sh          # asks for the keys (hidden), checks them, sends them to the TV
 ```
 
 The keys stay on the TV, in Pantheon's private storage; they're never in the repo. `./scripts/agent-keys.sh --clear`
-removes them. Test from a computer: `adb shell am start -n dev.pantheon.adultspace/.MainActivity --es council '{"minutes":45,"like":"something cozy"}'`
-and `adb logcat -s Pantheon/Agent`.
+removes them. Test from a computer: `adb shell am start -n dev.pantheon.adultspace/.MainActivity --es council '{"minutes":45,"like":"something cozy"}'`,
+or as if said to the mic: `--es ask "any flight delays from Atlanta today"`; watch `adb logcat -s Pantheon/Agent`.
 
 ## Themes
 

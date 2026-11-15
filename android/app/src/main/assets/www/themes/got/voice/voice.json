@@ -1,0 +1,74 @@
+{
+ "voice": "Ix8C14HEHgIQkJswik2o",
+ "model": "eleven_v3",
+ "lines": {
+  "ack": [
+   {
+    "text": "[clears throat] At once, Your Grace.",
+    "file": "ack_1.mp3"
+   },
+   {
+    "text": "As you command.",
+    "file": "ack_2.mp3"
+   },
+   {
+    "text": "It shall be done, Your Grace.",
+    "file": "ack_3.mp3"
+   },
+   {
+    "text": "[chuckles] Consider it done.",
+    "file": "ack_4.mp3"
+   },
+   {
+    "text": "Right away, Your Grace.",
+    "file": "ack_5.mp3"
+   }
+  ],
+  "think": [
+   {
+    "text": "A moment, Your Grace. [sighs] I shall consult the maesters.",
+    "file": "think_1.mp3"
+   },
+   {
+    "text": "Let me send a raven, Your Grace.",
+    "file": "think_2.mp3"
+   },
+   {
+    "text": "[clears throat] One moment. The Citadel keeps records of such things.",
+    "file": "think_3.mp3"
+   },
+   {
+    "text": "Allow me a moment, Your Grace. The ravens are flying.",
+    "file": "think_4.mp3"
+   }
+  ],
+  "council": [
+   {
+    "text": "I shall summon the Small Council, Your Grace.",
+    "file": "council_1.mp3"
+   },
+   {
+    "text": "[chuckles] The Council convenes. Let us see what the realm offers tonight.",
+    "file": "council_2.mp3"
+   },
+   {
+    "text": "Very good. The Council will have its counsel shortly.",
+    "file": "council_3.mp3"
+   }
+  ],
+  "sorry": [
+   {
+    "text": "[sighs] Forgive me, Your Grace. The ravens did not return.",
+    "file": "sorry_1.mp3"
+   },
+   {
+    "text": "I could not find that, Your Grace. [chuckles] Even the maesters are stumped.",
+    "file": "sorry_2.mp3"
+   },
+   {
+    "text": "[sighs] The ravens are lost in the storm, Your Grace. Ask me again.",
+    "file": "sorry_3.mp3"
+   }
+  ]
+ }
+}

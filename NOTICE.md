@@ -53,6 +53,15 @@ TV's country). Only each story's headline, source and time are shown; they belon
 - Decisions: **Jev** by TypeSafe AI; words: **DeepSeek V4.1 Flash** (Qwen 3.7 Flash as a backup), both through
   [OpenRouter](https://openrouter.ai), with your own key.
 
+## The voice
+
+- The Hand of the King and the Headmaster's portrait speak with voices from the
+  [ElevenLabs](https://elevenlabs.io) voice library ("Peter Baker - Deep, Clear and Mature" and "Daniel - The Gruff
+  Old British Wizard"), through ElevenLabs v3. The recorded lines in `home/themes/*/voice/` were made with them for
+  Pantheon.
+- Live answers search the web through OpenRouter's web plugin. US airport delays: the FAA's public airport status
+  feed (nasstatus.faa.gov).
+
 ## Weather and astronomy
 
 - Weather data from [Open-Meteo](https://open-meteo.com), under CC BY 4.0. The TV's rough location comes from
