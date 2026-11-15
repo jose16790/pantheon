@@ -17,7 +17,7 @@
   const KINDS = [["any", "Either"], ["movie", "Movie"], ["tv", "Series"]];
   const GENRES = ["Thriller", "Comedy", "Drama", "Sci-fi", "Fantasy", "Crime", "Mystery", "Action", "Romance", "Horror",
                   "Documentary", "Animation", "Family", "History"];
-  const GCOLS = 4;
+  const GCOLS = 3;
   const words = () => WORDS[document.body.dataset.theme] || WORDS._;
   const esc = s => String(s || "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
@@ -45,12 +45,30 @@
         #council .knob { position: absolute; top: 4px; width: 26px; height: 26px; margin-left: -13px; border-radius: 50%; background: var(--gold-hi);
                          box-shadow: 0 0 0 5px rgba(233,201,138,.25), 0 3px 10px rgba(0,0,0,.6); }
         #council .tval { font-size: 30px; margin-top: 10px; }
-        #council .pills { display: flex; flex-wrap: wrap; gap: 12px; }
-        #council .pill { padding: 10px 20px; border-radius: 26px; font-size: 20px; border: 1.5px solid rgba(233,201,138,.35); color: var(--ink); opacity: .85;
-                         transition: transform .15s, background .15s; }
-        #council .pill.on { background: var(--gold-hi); color: #170f08; border-color: var(--gold-hi); opacity: 1; }
-        #council .pill.cur { transform: scale(1.1); box-shadow: 0 0 0 3px #fff8e6; opacity: 1; }
-        #council .genres .pill { width: 128px; text-align: center; padding: 10px 0; }
+        /* choices as wax seals: an empty ring, filled with red wax when chosen; the name beside it, never inside a box */
+        #council .pills { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 10px; }
+        #council .kinds { grid-template-columns: repeat(3, max-content); gap: 14px 40px; }
+        #council .pill { display: flex; align-items: center; gap: 14px; min-width: 0; padding: 4px 0; color: var(--ink); opacity: .78;
+                         font: 600 16.5px/1.2 "Cinzel", Georgia, serif; letter-spacing: .04em; transition: opacity .15s, color .15s; }
+        #council .pill .seal { flex: none; position: relative; width: 26px; height: 26px; border-radius: 50%;
+                               border: 1.5px solid rgba(233,201,138,.55); box-sizing: border-box; transition: transform .2s, box-shadow .2s; }
+        #council .pill .lbl { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        #council .pill.on { opacity: 1; }
+        #council .pill.on .seal { border: none; transform: scale(1.12);
+          background: radial-gradient(circle at 38% 32%, #d4504a 0%, #9d1f1c 46%, #5e0d0c 100%);
+          box-shadow: 0 0 0 2px #c9a45c, 0 0 0 4px rgba(0,0,0,.45), 0 3px 8px rgba(0,0,0,.6), inset 0 -2px 4px rgba(0,0,0,.45), 0 0 14px rgba(196,40,36,.45); }
+        #council .pill.on .seal::after { content: ""; position: absolute; inset: 7px; border-radius: 50%; border: 1.5px solid rgba(255,214,190,.35); }
+        #council .pill.cur { opacity: 1; color: var(--gold-hi); }
+        #council .pill.cur .lbl { text-decoration: underline; text-decoration-color: rgba(233,201,138,.6); text-underline-offset: 6px; }
+        #council .pill.cur .seal { box-shadow: 0 0 0 3px #fff8e6, 0 0 16px rgba(255,240,200,.5); }
+        #council .pill.on.cur .seal { box-shadow: 0 0 0 2px #c9a45c, 0 0 0 4px #fff8e6, 0 0 18px rgba(255,220,180,.6); }
+        /* Game of Thrones: a real wax seal (themes/got/img/seal.webp): a faint grey impression until chosen, then red wax */
+        body[data-theme="got"] #council .pill .seal { width: 36px; height: 36px; border: none; border-radius: 0; box-shadow: none;
+          background: url(themes/got/img/seal.webp) center / contain no-repeat; filter: grayscale(1) brightness(1.5) contrast(.8); opacity: .32; }
+        body[data-theme="got"] #council .pill.on .seal { filter: drop-shadow(0 3px 4px rgba(0,0,0,.7)); opacity: 1; transform: scale(1.18) rotate(-8deg); background-color: transparent; box-shadow: none; }
+        body[data-theme="got"] #council .pill.on .seal::after { display: none; }
+        body[data-theme="got"] #council .pill.cur .seal { box-shadow: none; opacity: .65; }
+        body[data-theme="got"] #council .pill.on.cur .seal { box-shadow: none; opacity: 1; filter: drop-shadow(0 0 8px rgba(255,214,160,.75)) drop-shadow(0 3px 4px rgba(0,0,0,.7)); }
         #council input { width: 100%; box-sizing: border-box; font: inherit; font-size: 24px; padding: 14px 18px; border-radius: 12px; outline: none;
                          background: rgba(0,0,0,.35); color: var(--ink); border: 1.5px solid rgba(233,201,138,.35); }
         #council input::placeholder { color: var(--ink); opacity: .4; font-style: italic; }
@@ -79,8 +97,8 @@
       el.innerHTML = `<div class="form">
           <div class="h"></div><div class="sub"></div>
           <div class="zone z0"><div class="lab">Time you have</div><div class="slider"><div class="track"></div><div class="fill"></div><div class="knob"></div></div><div class="tval"></div></div>
-          <div class="zone z1"><div class="lab">Movie or series</div><div class="pills kinds">${KINDS.map(k => `<div class="pill">${k[1]}</div>`).join("")}</div></div>
-          <div class="zone z2"><div class="lab">In the mood for</div><div class="pills genres">${GENRES.map(g => `<div class="pill">${g}</div>`).join("")}</div></div>
+          <div class="zone z1"><div class="lab">Movie or series</div><div class="pills kinds">${KINDS.map(k => `<div class="pill"><span class="seal"></span><span class="lbl">${k[1]}</span></div>`).join("")}</div></div>
+          <div class="zone z2"><div class="lab">In the mood for</div><div class="pills genres">${GENRES.map(g => `<div class="pill"><span class="seal"></span><span class="lbl">${g}</span></div>`).join("")}</div></div>
           <div class="zone z3"><div class="lab like"></div><input type="text" placeholder="like Severance, but funnier"></div>
           <div class="zone z4"><div class="ask"></div></div>
         </div>
