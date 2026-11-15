@@ -33,7 +33,7 @@ case "${1:-status}" in
     # Pantheon puts its watch back itself if Android drops it (it does on a force-stop): that needs this permission,
     # and Pantheon told that Home mode is on (home/HomeGuard.java)
     A pm grant "$PKG" android.permission.WRITE_SECURE_SETTINGS >/dev/null 2>&1 || echo "note: couldn't let Pantheon repair its watch (older build?)"
-    A am start -n "$PKG/.MainActivity" --ez pantheon_home_mode true >/dev/null 2>&1 || true
+    A am broadcast -n dev.pantheon.adultspace/.control.AdbControl --ez pantheon_home_mode true >/dev/null 2>&1 || true
     CUR=$(A settings get secure enabled_accessibility_services)
     case ":$CUR:" in
       *":$WATCH:"*) # listed already: re-list it so Android binds it again after an update
@@ -48,7 +48,7 @@ case "${1:-status}" in
     A input keyevent KEYCODE_HOME
     echo "Pantheon is the home screen; the Home watch is on." ;;
   undo)
-    A am start -n "$PKG/.MainActivity" --ez pantheon_home_mode false >/dev/null 2>&1 || true
+    A am broadcast -n dev.pantheon.adultspace/.control.AdbControl --ez pantheon_home_mode false >/dev/null 2>&1 || true
     A pm revoke "$PKG" android.permission.WRITE_SECURE_SETTINGS >/dev/null 2>&1 || true
     A cmd package set-home-activity "$GOOGLE_HOME" >/dev/null || true
     CUR=$(A settings get secure enabled_accessibility_services)

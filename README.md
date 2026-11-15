@@ -175,7 +175,7 @@ Action types: `launch {app}`, `key {key: home|play_pause|play|pause|next|previou
 Move the agent without rebuilding:
 
 ```bash
-adb shell am start -n dev.pantheon.adultspace/.MainActivity --es agent_url http://192.168.0.100:8080/agent
+adb shell am broadcast -n dev.pantheon.adultspace/.control.AdbControl --es agent_url http://192.168.0.100:8080/agent
 ```
 
 ## Voice agent
@@ -270,7 +270,7 @@ fraction of a cent), a free [TMDB](https://www.themoviedb.org/settings/api) key 
 ```
 
 The keys stay on the TV, in Pantheon's private storage; they're never in the repo. `./scripts/agent-keys.sh --clear`
-removes them. Test from a computer: `adb shell am start -n dev.pantheon.adultspace/.MainActivity --es council '{"minutes":45,"like":"something cozy"}'`,
+removes them. Test from a computer: `adb shell am broadcast -n dev.pantheon.adultspace/.control.AdbControl --es council '{"minutes":45,"like":"something cozy"}'`,
 or as if said to the mic: `--es ask "any flight delays from Atlanta today"`; watch `adb logcat -s Pantheon/Agent`.
 
 ## Themes
@@ -329,7 +329,7 @@ stays on your machine and is never committed), run:
 
 Then reinstall with `./install.sh`. To go back to the built-in score, run `./scripts/add-music.sh --remove`.
 
-**Testing a weather**: `adb shell am start -n dev.pantheon.adultspace/.MainActivity --es wx thunder --es wx_at 2026-11-14T21:00`
+**Testing a weather**: `adb shell am broadcast -n dev.pantheon.adultspace/.control.AdbControl --es wx thunder --es wx_at 2026-11-14T21:00`
 (clear | partly | overcast | fog | drizzle | rain | heavyrain | snow | blizzard | thunder). Use `--es wx live` to return to
 the real weather.
 
