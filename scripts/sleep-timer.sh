@@ -10,12 +10,12 @@ set -euo pipefail
 M="${1:-30}"
 if [ "$M" = off ]; then
   A settings put system screen_off_timeout 600000; A settings put secure sleep_timeout 1200000
-  A am start -n dev.pantheon.adultspace/.MainActivity --ei sleep_minutes 0 >/dev/null
+  A am start -n dev.pantheon.adultspace/.MainActivity --ei sleep_minutes 0 >/dev/null 2>&1
   echo "Pantheon's countdown is off; the TV's own timer is back to 10 minutes (screen) / 20 (sleep)."; exit 0
 fi
 case "$M" in ''|*[!0-9]*) echo "usage: $0 <minutes>|off"; exit 1 ;; esac
 MS=$(( (M + 1) * 60000 ))          # the TV's own timer a minute later, so Pantheon's countdown comes first
 A settings put system screen_off_timeout "$MS"
 A settings put secure sleep_timeout "$MS"
-A am start -n dev.pantheon.adultspace/.MainActivity --ei sleep_minutes "$M" >/dev/null
+A am start -n dev.pantheon.adultspace/.MainActivity --ei sleep_minutes "$M" >/dev/null 2>&1
 echo "Sleep timer: $M minutes (countdown for the last 30 seconds on Pantheon's home screen)."
