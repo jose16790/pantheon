@@ -15,6 +15,19 @@ greenhouse. Pantheon adds three things to it:
 > Unofficial fan project. Not affiliated with Warner Bros., HBO, Marvel/Disney, Google or the app makers whose logos
 > the dock shows. See [NOTICE.md](NOTICE.md).
 
+## Quick start (for friends)
+
+You need a Mac (with [Homebrew](https://brew.sh)) or Linux, and your TV on the same Wi-Fi.
+
+```bash
+git clone https://github.com/jose16790/pantheon.git && cd pantheon && ./install.sh
+```
+
+The installer sets up the tools, builds Pantheon, shows you how to turn on wireless debugging on the TV, pairs with
+it (you type the 6-digit code from the TV), installs Pantheon, and then asks, one at a time, whether to make it your
+home screen, give it the mic button, clean out the ads, and which theme to start with. Run it in a normal terminal
+window, since it asks questions. To update later: `git pull && ./install.sh`.
+
 ## Layout
 
 ```
@@ -34,9 +47,9 @@ adult-space/
 scripts/fetch-fanart.sh     downloads the castle pictures from upstream for a personal build
 ```
 
-## Build
+## Build by hand
 
-Requirements: JDK 17 and the Android SDK (platform 35). On macOS with Homebrew:
+(`./install.sh` does all of this.) Requirements: JDK 17 and the Android SDK (platform 35). On macOS with Homebrew:
 
 ```bash
 brew install openjdk@17 && brew install --cask android-commandlinetools
