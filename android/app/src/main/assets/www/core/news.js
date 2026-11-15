@@ -56,7 +56,9 @@
       R.lab.textContent = L.rows[i];
       if (!list.length) { R.t.textContent = ""; R.m.textContent = ""; return; }
       any = true;
-      const item = list[Math.floor((step - i) / 3) % list.length], key = item.t;
+      let n = Math.floor((step - i) / 3), item = list[n % list.length];
+      for (let tries = 0; tries < list.length && shown.some((t, j) => j !== i && t === item.t); tries++) item = list[++n % list.length];   // never the same story in two rows
+      const key = item.t;
       R.m.textContent = [item.src, ago(item.ts)].filter(Boolean).join("  ·  ");
       if (key === shown[i] && !force) return;
       shown[i] = key;
