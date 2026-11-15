@@ -44,7 +44,7 @@ mkdir -p "$GW/dragon" "$GW/img/covers" "$GW/sounds"
 cp "$G/scene.js" "$GW/"
 cp "$G/dragon/"*.webp "$G/dragon/"*.js "$GW/dragon/"
 cp "$G/img/covers/"*.jpg "$GW/img/covers/"
-cp "$G/img/glass.png" "$G/img/clouds_"*.webp "$G/img/torch".* "$GW/img/"
+cp "$G/img/glass.png" "$G/img/clouds_"*.webp "$G/img/torch".* "$G/img/seal.webp" "$GW/img/"
 cp "$G/sounds/"*.mp3 "$G/sounds/"*.js "$GW/sounds/"            # fire, music (and your own: scripts/add-music.sh)
 # every theme's recorded voice lines (home/tools/voice_lines.py): the agent plays them while it works
 for d in "$HOME_DIR/themes/"*/voice; do

@@ -37,7 +37,7 @@ Everything in `home/themes/got/` was made for Pantheon. The throne room (`img/th
 (`img/shelf.jpg`), the eight season covers (`img/covers/`), the dragon (`dragon/`) and its fire breath were generated with
 AI image and video models (via Sume: GPT Image 2.5 and Seedance 2.5) from original descriptions. No HBO artwork, stills
 or posters were used. The same goes for the room by day, at golden hour and under cloud (`img/throne_{day,golden,overcast}.jpg`),
-the cloud panoramas (`img/clouds_*.webp`), the torch flame and its crackle (`img/torch.webp`, `sounds/fire.mp3`), and the
+the cloud panoramas (`img/clouds_*.webp`), the wax seal (`img/seal.webp`), the torch flame and its crackle (`img/torch.webp`, `sounds/fire.mp3`), and the
 score (`sounds/music.mp3`, an original track made with Sume Music 1.0; not the show's theme). They're included in this repository under the same MIT licence as the code. They depict an unofficial
 fan theme; the names and the world they evoke belong to their owners (below).
 
