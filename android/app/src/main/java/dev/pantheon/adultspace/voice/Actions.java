@@ -27,6 +27,7 @@ import java.util.Locale;
  *   search  {query}    the TV's own search for a title
  *   volume  {percent}  set the volume (0-100)
  *   theme   {id}       switch Pantheon's theme: got, hogwarts, marvel
+ *   sleep              put the TV to sleep
  *
  * Anything else is logged and skipped. Nothing here pays, signs in or types anything.
  */
@@ -50,6 +51,7 @@ public final class Actions {
                 case "key":    ok = key(a, o.optString("key")); break;
                 case "search": ok = search(a, o.optString("query")); break;
                 case "volume": ok = o.has("percent") && setVolume(a, o.optInt("percent")); break;
+                case "sleep":  ok = dev.pantheon.adultspace.home.HomeWatch.sleepNow(); break;
                 case "theme":  ok = a instanceof dev.pantheon.adultspace.MainActivity && ((dev.pantheon.adultspace.MainActivity) a).switchTheme(o.optString("id")); break;
                 default:       ok = false; Log.w(TAG, "unknown action " + o);
             }

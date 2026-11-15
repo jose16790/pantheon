@@ -18,6 +18,8 @@ import android.media.tv.TvInputManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Base64;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -149,7 +151,42 @@ public class MainActivity extends Activity {
         web.requestFocus();
     }
 
+    // ---------------------------------------------------------------- the sleep timer
+    // After this long with no button pressed while Pantheon is on screen (30 minutes; scripts/sleep-timer.sh sets it), a
+    // 30-second countdown shows; any button stops it, else the TV goes to sleep (through the Home watch).
+    private static final long COUNTDOWN = 30_000;
+    private final Handler idle = new Handler(Looper.getMainLooper());
+    private long lastInput = System.currentTimeMillis();
+    private boolean counting;
+    private long sleepAfter() { return prefs().getInt("sleep_minutes", 30) * 60_000L; }
+    private final Runnable idleTick = new Runnable() {
+        @Override public void run() {
+            long quiet = System.currentTimeMillis() - lastInput, after = sleepAfter();
+            if (after > 0 && !counting && quiet >= after - COUNTDOWN) {
+                counting = true;
+                web.evaluateJavascript("window.pantheonSleep && pantheonSleep.start(" + Math.max(1, (after - quiet) / 1000) + ")", null);
+            }
+            if (after > 0 && counting && quiet >= after) {
+                counting = false;
+                web.evaluateJavascript("window.pantheonSleep && pantheonSleep.stop()", null);
+                lastInput = System.currentTimeMillis();
+                dev.pantheon.adultspace.home.HomeWatch.sleepNow();
+            }
+            idle.postDelayed(this, 1000);
+        }
+    };
+
+    private void stillHere() {
+        lastInput = System.currentTimeMillis();
+        if (counting) { counting = false; web.evaluateJavascript("window.pantheonSleep && pantheonSleep.stop()", null); }
+    }
+
     @Override public boolean dispatchKeyEvent(KeyEvent e) {
+        if (e.getAction() == KeyEvent.ACTION_DOWN) {
+            boolean wasCounting = counting;
+            stillHere();
+            if (wasCounting) return true;                      // that press only stopped the countdown
+        }
         // Every key, so the mic button's code can be found on a new remote:  adb logcat -s Pantheon/Keys
         if (e.getAction() == KeyEvent.ACTION_DOWN && e.getRepeatCount() == 0)
             Log.d("Pantheon/Keys", KeyEvent.keyCodeToString(e.getKeyCode()) + " (" + e.getKeyCode() + ")");
@@ -192,6 +229,11 @@ public class MainActivity extends Activity {
         String agentAsked = intent.getStringExtra("agent_url");
         if (agentAsked != null) AgentConfig.set(this, agentAsked);
         takeKeys(intent);
+        if (intent.hasExtra("sleep_minutes")) prefs().edit().putInt("sleep_minutes", intent.getIntExtra("sleep_minutes", 30)).apply();   // 0: off
+        if (intent.hasExtra("sleep_test")) {                         // testing: pretend the remote's been idle until N s before sleep
+            int left = intent.getIntExtra("sleep_test", 35);
+            idle.postDelayed(() -> lastInput = System.currentTimeMillis() - sleepAfter() + left * 1000L, 1500);
+        }
         // testing the agentic remote: adb shell am start ... --es council '{"minutes":45,"like":"like Severance"}'
         String ask = intent.getStringExtra("ask");                       // testing the voice: as if said to the mic
         if (ask != null) voice.handleText(ask);
@@ -206,11 +248,13 @@ public class MainActivity extends Activity {
 
     @Override protected void onResume() {
         super.onResume(); showing = this; web.onResume(); web.requestFocus(); weather.start(); news.start();
+        stillHere(); idle.removeCallbacks(idleTick); idle.postDelayed(idleTick, 1000);
         web.evaluateJavascript("window.pantheonAudio && pantheonAudio.resume()", null);
     }
     @Override protected void onPause() {
         if (showing == this) showing = null;
         web.evaluateJavascript("window.pantheonAudio && pantheonAudio.pause()", null);   // silent the moment an app opens
+        idle.removeCallbacks(idleTick); stillHere();
         weather.stop(); news.stop(); web.onPause(); super.onPause();
     }
     @Override protected void onDestroy() { voice.destroy(); agent.shutdown(); web.destroy(); super.onDestroy(); }
