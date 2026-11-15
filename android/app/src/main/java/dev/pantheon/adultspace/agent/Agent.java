@@ -219,7 +219,7 @@ public final class Agent {
         JSONObject a = or.json("You control a TV home screen called Pantheon. Turn the viewer's words into actions. Reply with "
                 + "JSON only: {\"reply\": \"a few words on what you did\", \"actions\": [...]}. Actions: "
                 + "{\"type\":\"launch\",\"app\":\"app name\"}, {\"type\":\"key\",\"key\":\"home|play_pause|play|pause|next|previous|volume_up|volume_down|mute\"}, "
-                + "{\"type\":\"volume\",\"percent\":0-100}, {\"type\":\"search\",\"query\":\"title\"}, {\"type\":\"theme\",\"id\":\"got|hogwarts|marvel\"}. "
+                + "{\"type\":\"volume\",\"percent\":0-100}, {\"type\":\"search\",\"query\":\"title\"}, {\"type\":\"theme\",\"id\":\"got|hogwarts|marvel\"}, {\"type\":\"sleep\"} (turn the TV off). "
                 + "Use no actions if none fit, and say so briefly in reply.", text, 200, 8000);
         ui(() -> {
             int done = Actions.run(act, a.toString());

@@ -54,6 +54,8 @@ home/                       the home screen: one page, shared by every theme
     weather.js              the weather wizard: the weather outside, the sun's and moon's positions, the moon's phase
     news.js                 the headlines panel
     council.js              the Small Council: the agentic remote's panel
+    conversation.js         the voice conversation on a scroll (The King / The Hand)
+    sleep.js                the sleep timer's countdown
   fonts/                    Cinzel (SIL OFL)
   img/logos/                the dock's app logos (fetched)
   themes/
@@ -77,7 +79,7 @@ android/                    the Android TV app: a full-screen WebView and a JS b
     theme/                  ThemeData: GameOfThronesTheme, HogwartsTheme, MarvelTheme; ThemeManager (default: got)
 build.sh                    copies home/ into the app and builds dist/Pantheon.apk
 install.sh                  one-command setup: tools, build, pairing, install, home screen, unbloat, theme
-scripts/                    home.sh, unbloat.sh, assistant.sh, agent-keys.sh, add-music.sh, fetch-fanart.sh
+scripts/                    home.sh, unbloat.sh, assistant.sh, agent-keys.sh, sleep-timer.sh, add-music.sh, fetch-fanart.sh
 docs/hogwarts-tv-home/      the original castle project's README, guide and prompt, kept for reference
 ```
 
@@ -134,6 +136,14 @@ Android silently switches an app's accessibility service off when the app is for
 TV wake to Google's home. So `home.sh apply` also lets Pantheon repair its own watch (it grants the one permission
 that needs, `WRITE_SECURE_SETTINGS`, which only adb can grant): Pantheon checks the watch at boot, after an update,
 when it opens, and, while it's your assistant, every time the screen turns on (`home/HomeGuard.java`).
+
+**Sleep timer.** After 30 minutes with no button pressed, the TV goes to sleep. On Pantheon's home screen a
+30-second countdown shows first ("The night grows long, Your Grace"); any button stops it. You can also just say
+"turn off the TV". Set the time (the TV's own timer is set to match, for other apps):
+
+```bash
+scripts/sleep-timer.sh 30       # minutes; "off" turns Pantheon's countdown off
+```
 
 Note: wireless debugging switches itself off when the TV restarts. Turn it back on in Developer options (the
 Mac stays paired).

@@ -30,8 +30,20 @@ public final class HomeWatch extends AccessibilityService {
     private static final String[] HOME_SCREENS = {
             "com.google.android.apps.tv.launcherx.home.HomeActivity", "com.google.android.tvlauncher.MainActivity" };
     private long last, homePressed;
+    private static HomeWatch running;
+
+    /** Put the TV to sleep now (the sleep timer, or "turn off the TV"). False if the Home watch isn't on. */
+    public static boolean sleepNow() {
+        HomeWatch w = running;
+        if (w == null || android.os.Build.VERSION.SDK_INT < 28) { Log.w(TAG, "can't sleep: the Home watch is off"); return false; }
+        Log.i(TAG, "sleep");
+        return w.performGlobalAction(GLOBAL_ACTION_LOCK_SCREEN);
+    }
+
+    @Override public boolean onUnbind(Intent i) { running = null; return super.onUnbind(i); }
 
     @Override protected void onServiceConnected() {
+        running = this;
         Log.i(TAG, "on: Google's home will hand over to Pantheon");
         if (HomeGuard.consumeKick(this) && !CrashGuard.standingAside(this)) bringPantheon();   // just put back: Google's home is likely showing
     }
