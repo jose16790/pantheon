@@ -1,0 +1,34 @@
+# ---- build output and machine-specific files
+build/
+.gradle/
+local.properties
+.DS_Store
+__pycache__/
+*.apk
+
+# ---- signing keys never go in the repo
+adult-space/hogwarts-tv/release/
+*.jks
+*.keystore
+keystore.properties
+
+# ---- reference checkout of couch-tv (MIT, credited in NOTICE.md); not part of this repo
+couch-tv/
+
+# ---- fan art: NOT covered by the code licence, never committed.
+# scripts/fetch-fanart.sh downloads it from the upstream repo for a personal build.
+adult-space/hogwarts/img/*.jpg
+adult-space/hogwarts/img/*.png
+adult-space/hogwarts/img/logos/
+adult-space/hogwarts/owl/*.webp
+adult-space/hogwarts/owl/*.webm
+adult-space/hogwarts/owl/src/
+adult-space/hogwarts/covers/
+adult-space/hogwarts-tv/app/src/main/assets/www/img/*.jpg
+adult-space/hogwarts-tv/app/src/main/assets/www/img/*.png
+adult-space/hogwarts-tv/app/src/main/assets/www/img/logos/
+adult-space/hogwarts-tv/app/src/main/assets/www/owl/*.webp
+adult-space/hogwarts-tv/app/src/main/assets/www/owl/*.webm
+adult-space/hogwarts-tv/app/src/main/assets/www/covers/
+adult-space/hogwarts-tv/app/src/main/res/drawable-nodpi/banner.jpg
+adult-space/docs/

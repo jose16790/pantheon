@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Pantheon</string>
+    <!-- where a voice prompt is sent (the Raspberry Pi agent). Plain http is allowed only to this host: res/xml/network_security_config.xml -->
+    <string name="agent_url" translatable="false">http://192.168.1.100:8080/agent</string>
+    <!-- the HDMI input the PlayStation tile opens: set your TV's (adb shell dumpsys tv_input lists the input ids) -->
+    <string name="ps5_input" translatable="false">com.mediatek.tvinput/.hdmi.HDMIInputService/HW5</string>
+</resources>
