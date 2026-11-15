@@ -2,7 +2,7 @@
 # Pantheon: one command from a fresh clone to Pantheon on your Google TV / Android TV.
 #
 #   ./install.sh                 the whole thing, step by step (it asks before changing anything on the TV)
-#   ./install.sh --build-only    just the tools and the APK (dist/Pantheon-adult-space.apk)
+#   ./install.sh --build-only    just the tools and the APK (dist/Pantheon.apk)
 #   ./install.sh --tv-only       skip the build: install the APK already in dist/ and set up the TV
 #
 # Works on macOS (with Homebrew) and Linux. You need: the TV and this computer on the same Wi-Fi, and about 3 GB
@@ -11,7 +11,7 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 MODE="${1:-all}"
-APK="$ROOT/dist/Pantheon-adult-space.apk"
+APK="$ROOT/dist/Pantheon.apk"
 
 b=$'\e[1m'; d=$'\e[2m'; g=$'\e[32m'; y=$'\e[33m'; r=$'\e[31m'; n=$'\e[0m'
 step() { echo; echo "${b}━━ $* ${n}"; }
@@ -72,7 +72,7 @@ if [ "$MODE" != --tv-only ]; then
   # ─────────────────────────────────────────────────────────── 2. build
   step "2/5  Building Pantheon"
   note "first build downloads Gradle and the castle pictures; a few minutes"
-  ADB="$ADB" "$ROOT/adult-space/build.sh" >/tmp/pantheon-build.log 2>&1 || { tail -20 /tmp/pantheon-build.log; die "The build failed (full log: /tmp/pantheon-build.log)."; }
+  ADB="$ADB" "$ROOT/build.sh" >/tmp/pantheon-build.log 2>&1 || { tail -20 /tmp/pantheon-build.log; die "The build failed (full log: /tmp/pantheon-build.log)."; }
   ok "built $APK"
   [ "$MODE" = --build-only ] && { echo; ok "Done. Install it later with: ./install.sh --tv-only"; exit 0; }
 fi

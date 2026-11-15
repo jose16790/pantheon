@@ -9,7 +9,7 @@ authors.
 - Repository: https://github.com/ikevinadams/hogwarts-tv-home
 - Imported at commit `df626428e7f808caaf3f47d509df03b9d684ab4e`
 - Licence: MIT, Copyright (c) 2026 ikevinadams
-- Used for: the whole `adult-space/` base. That includes the WebView home-screen shell
+- Used for: the home-screen base. That includes the WebView home-screen shell
   (`MainActivity`), the castle page (`hogwarts/index.html`), D-pad navigation, the
   hopping-owl animation and the asset tools (`hogwarts/tools/`), and the whole Hogwarts theme.
 - Modified by Pantheon: the voice agent and mic button, the theme picker and the Game of Thrones scene,
@@ -33,13 +33,12 @@ your own machine for a personal build.
 
 ## Pantheon's own artwork (the Game of Thrones theme, by Jose)
 
-The throne room (`img/got/throne.jpg`), the library shelf (`img/got/shelf.jpg`), the eight season covers
-(`img/got/covers/`), the dragon (`dragon/`) and its fire breath were generated with AI image and video models for
-this project (via Sume: GPT Image 2.5 and Seedance 2.5) from original descriptions. No HBO artwork, stills or posters
-were used. The same goes for the room by day, at golden hour and under cloud (`img/got/throne_{day,golden,overcast}.jpg`),
-the cloud panoramas (`img/got/clouds_*.webp`), the torch flame and its crackle (`img/got/torch.webp`,
-`sounds/got/fire.mp3`), and the score (`sounds/got/music.mp3`, an original track made with Sume Music 1.0; not the
-show's theme). They're included in this repository under the same MIT licence as the code. They depict an unofficial
+Everything in `home/themes/got/` was made for Pantheon. The throne room (`img/throne.jpg`), the library shelf
+(`img/shelf.jpg`), the eight season covers (`img/covers/`), the dragon (`dragon/`) and its fire breath were generated with
+AI image and video models (via Sume: GPT Image 2.5 and Seedance 2.5) from original descriptions. No HBO artwork, stills
+or posters were used. The same goes for the room by day, at golden hour and under cloud (`img/throne_{day,golden,overcast}.jpg`),
+the cloud panoramas (`img/clouds_*.webp`), the torch flame and its crackle (`img/torch.webp`, `sounds/fire.mp3`), and the
+score (`sounds/music.mp3`, an original track made with Sume Music 1.0; not the show's theme). They're included in this repository under the same MIT licence as the code. They depict an unofficial
 fan theme; the names and the world they evoke belong to their owners (below).
 
 ## Headlines
@@ -51,13 +50,13 @@ TV's country). Only each story's headline, source and time are shown; they belon
 
 - Weather data from [Open-Meteo](https://open-meteo.com), under CC BY 4.0. The TV's rough location comes from
   [ipapi.co](https://ipapi.co), or [ipwho.is](https://ipwho.is) as a fallback.
-- The sun and moon positions and the moon's phase (`themes/weather.js`) follow the formulas of
+- The sun and moon positions and the moon's phase (`home/core/weather.js`) follow the formulas of
   [SunCalc](https://github.com/mourner/suncalc) by Vladimir Agafonkin (BSD 2-Clause), re-derived for this project.
 
 ## Fonts
 
-- **Cinzel** (`fonts/Cinzel.ttf`), by the Cinzel Project Authors, under the SIL Open Font License 1.1
-  (`fonts/Cinzel-OFL.txt`). Used for the season captions.
+- **Cinzel** (`home/fonts/Cinzel.ttf`), by the Cinzel Project Authors, under the SIL Open Font License 1.1
+  (`home/fonts/Cinzel-OFL.txt`). Used for the season captions.
 
 ## Trademarks
 

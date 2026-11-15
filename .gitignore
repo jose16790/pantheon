@@ -7,7 +7,7 @@ __pycache__/
 *.apk
 
 # ---- signing keys never go in the repo
-adult-space/hogwarts-tv/release/
+android/release/
 *.jks
 *.keystore
 keystore.properties
@@ -15,30 +15,30 @@ keystore.properties
 # ---- reference checkout of couch-tv (MIT, credited in NOTICE.md); not part of this repo
 couch-tv/
 
-# ---- fan art: NOT covered by the code licence, never committed.
-# scripts/fetch-fanart.sh downloads it from the upstream repo for a personal build.
-adult-space/hogwarts/img/*.jpg
-adult-space/hogwarts/img/*.png
-adult-space/hogwarts/img/logos/
-adult-space/hogwarts/owl/*.webp
-adult-space/hogwarts/owl/*.webm
-adult-space/hogwarts/owl/src/
-adult-space/hogwarts/covers/
-adult-space/hogwarts-tv/app/src/main/assets/www/img/*.jpg
-adult-space/hogwarts-tv/app/src/main/assets/www/img/*.png
-adult-space/hogwarts-tv/app/src/main/assets/www/img/logos/
-adult-space/hogwarts-tv/app/src/main/assets/www/owl/*.webp
-adult-space/hogwarts-tv/app/src/main/assets/www/owl/*.webm
-adult-space/hogwarts-tv/app/src/main/assets/www/covers/
-adult-space/hogwarts-tv/app/src/main/res/drawable-nodpi/banner.jpg
-adult-space/docs/
+# ---- the Hogwarts theme's pictures (upstream fan art): NOT covered by the code licence, never committed.
+# scripts/fetch-fanart.sh downloads them from the upstream repo for a personal build.
+home/img/logos/
+home/themes/hogwarts/img/*.jpg
+home/themes/hogwarts/img/*.png
+home/themes/hogwarts/owl/*.webp
+home/themes/hogwarts/owl/*.webm
+home/themes/hogwarts/owl/src/
+home/themes/hogwarts/covers/
+android/app/src/main/assets/www/img/logos/
+android/app/src/main/assets/www/themes/hogwarts/img/*.jpg
+android/app/src/main/assets/www/themes/hogwarts/img/*.png
+android/app/src/main/assets/www/themes/hogwarts/owl/*.webp
+android/app/src/main/assets/www/themes/hogwarts/owl/*.webm
+android/app/src/main/assets/www/themes/hogwarts/covers/
+android/app/src/main/res/drawable-nodpi/banner.jpg
+docs/hogwarts-tv-home/docs/
 
 # per-TV undo lists written by scripts/unbloat.sh
 scripts/tvs/
 
-# the dragon and fire source clips (~30 MB): only needed to re-cut the sprites (tools/dragon_sprites.py, fire_sprites.py)
-adult-space/hogwarts/dragon/src/*.mp4
+# the dragon and fire source clips (~30 MB): only needed to re-cut the sprites (themes/got/tools/dragon_sprites.py, fire_sprites.py)
+home/themes/got/dragon/src/*.mp4
 
 # your own music for the Game of Thrones theme (scripts/add-music.sh): local only, never committed
-adult-space/hogwarts/sounds/got/music-local.*
-adult-space/hogwarts-tv/app/src/main/assets/www/sounds/got/music-local.*
+home/themes/got/sounds/music-local.*
+android/app/src/main/assets/www/themes/got/sounds/music-local.*

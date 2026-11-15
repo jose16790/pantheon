@@ -39,28 +39,41 @@ window, since it asks questions. To update later: `git pull && ./install.sh`.
 
 ## Layout
 
+Pantheon is an engine and its themes. Each theme lives in its own folder with everything it needs, so a new theme
+(Marvel is next) is a new folder.
+
 ```
-adult-space/
-  hogwarts/                 the home-screen page (HTML/JS), shared by every theme
-    index.html              sections, the remote's keys, the mascot, the dock, the clock
-    themes/theme.js         applies a theme (CSS variables, pictures, scene) and the theme picker
-    themes/got.js           the Game of Thrones scene: Drogon and his fire, torches, sky, room light, fog, sound, greeting
-    themes/weather.js       the weather wizard: the weather outside, the sun's and moon's positions, the moon's phase
-    themes/news.js          the headlines panel
-    img/got/, dragon/, sounds/got/   the Game of Thrones theme's artwork, dragon sprites and sound (made for Pantheon)
-    tools/                  how those were made, and the TV-sized copies (got_*.py, tv_assets.py)
-  hogwarts-tv/              the Android TV app (a full-screen WebView + a JS bridge called `TV`)
-    app/src/main/java/dev/pantheon/adultspace/
-      MainActivity.java     the WebView, the bridge, remote keys
-      voice/                mic → speech-to-text → local commands or the agent; the agent's actions
-      assist/               Pantheon as the TV's assistant (the remote's mic button)
-      home/                 the Home watch and its self-repair (Pantheon stays the home screen)
-      weather/Weather.java  where the TV is (from its internet connection) and the weather there
-      news/News.java        the headlines, by the TV's country
-      theme/                ThemeData: GameOfThronesTheme, HogwartsTheme, MarvelTheme; ThemeManager (default: got)
-  build.sh                  builds the APK
+home/                       the home screen: one page, shared by every theme
+  index.html                the shell: clock, dock, top row, sections, the remote's keys, the mascot
+  config.js                 your dock's apps and where the library's titles open
+  core/
+    theme.js                applies a theme (colours, pictures, scene) and the theme picker
+    weather.js              the weather wizard: the weather outside, the sun's and moon's positions, the moon's phase
+    news.js                 the headlines panel
+  fonts/                    Cinzel (SIL OFL)
+  img/logos/                the dock's app logos (fetched)
+  themes/
+    got/                    Game of Thrones, Pantheon's own
+      scene.js              Drogon and his fire, torches, sky, room light, fog, dust, sound, the greeting scroll
+      img/ dragon/ sounds/  its artwork, sprites and sound (made for Pantheon; img/src/ has the originals)
+      tools/                how they were made, and their TV-sized copies (got_assets.py)
+    hogwarts/               Hogwarts, from hogwarts-tv-home
+      img/ owl/ covers/     the castle, Hedwig and the films (fetched: scripts/fetch-fanart.sh)
+      tools/                upstream's picture tools, and the TV-sized copies (tv_assets.py)
+android/                    the Android TV app: a full-screen WebView and a JS bridge called `TV`
+  app/src/main/assets/www/  the app's copy of home/, with pictures at TV size (made by build.sh)
+  app/src/main/java/dev/pantheon/adultspace/
+    MainActivity.java       the WebView, the bridge, remote keys
+    voice/                  mic → speech-to-text → local commands or the agent; the agent's actions
+    assist/                 Pantheon as the TV's assistant (the remote's mic button)
+    home/                   the Home watch and its self-repair (Pantheon stays the home screen)
+    weather/Weather.java    where the TV is (from its internet connection) and the weather there
+    news/News.java          the headlines, by the TV's country
+    theme/                  ThemeData: GameOfThronesTheme, HogwartsTheme, MarvelTheme; ThemeManager (default: got)
+build.sh                    copies home/ into the app and builds dist/Pantheon.apk
 install.sh                  one-command setup: tools, build, pairing, install, home screen, unbloat, theme
-scripts/                    home.sh, unbloat.sh, assistant.sh, add-music.sh, fetch-fanart.sh (the castle's pictures)
+scripts/                    home.sh, unbloat.sh, assistant.sh, add-music.sh, fetch-fanart.sh
+docs/hogwarts-tv-home/      the original castle project's README, guide and prompt, kept for reference
 ```
 
 ## Build by hand
@@ -74,7 +87,8 @@ brew install openjdk@17 && brew install --cask android-commandlinetools
 Then:
 
 ```bash
-adult-space/build.sh            # fetches fan art on first run, builds dist/Pantheon-adult-space.apk
+./build.sh                      # fetches the Hogwarts pictures on first run, builds dist/Pantheon.apk
+./build.sh --regen-art          # also re-makes the TV-sized pictures (needs python3 with numpy and Pillow)
 ```
 
 ## Install on a Google TV (Wi-Fi ADB)
@@ -84,7 +98,7 @@ options →* turn on *USB debugging*, then *Wireless debugging*, and note the IP
 
 ```bash
 adb connect <TV-IP>:5555          # Android 14 Google TV: use "adb pair" first with the pairing code
-adb install -r dist/Pantheon-adult-space.apk
+adb install -r dist/Pantheon.apk
 ```
 
 The release build offers itself as a home screen. Choose it when you press Home, or set it as the default.
@@ -211,7 +225,7 @@ The castle by the lake, with Hedwig hopping between apps, the films as a library
 them. Pantheon has modified it with several new features: the voice agent and mic button, the theme picker, the
 place and weather under the clock, *The Daily Prophet*'s headlines, the Home takeover and self-repair, the unbloat,
 Crave and Disney+ in the dock, and the one-command installer. Its pictures stay upstream and are fetched onto your
-machine when you build (`scripts/fetch-fanart.sh`).
+machine when you build (`scripts/fetch-fanart.sh`), into `home/themes/hogwarts/`.
 
 ### Marvel: coming next
 
@@ -247,8 +261,8 @@ Then reinstall with `./install.sh`. To go back to the built-in score, run `./scr
 (clear | partly | overcast | fog | drizzle | rain | heavyrain | snow | blizzard | thunder). Use `--es wx live` to return to
 the real weather.
 
-A theme is a `ThemeData` class (`theme/`) for its colours and pictures, plus, optionally, a scene in
-`themes/<id>.js` for its mascot, live effects and books (see `themes/got.js`).
+A theme is a folder, `home/themes/<id>/` (its scene, pictures, sprites, sounds and tools), plus a `ThemeData` class in
+`android/.../theme/` for its colours and pictures. See `home/themes/got/`.
 
 From a computer: `adb shell am start -n dev.pantheon.adultspace/.MainActivity --es theme got` (hogwarts | got | marvel).
 
@@ -256,7 +270,7 @@ From a computer: `adb shell am start -n dev.pantheon.adultspace/.MainActivity --
 
 - **Pantheon**, and its Game of Thrones theme, designed and built by **Jose** ([jose16790](https://github.com/jose16790)).
 - **Hogwarts** theme and the home-screen base: [hogwarts-tv-home](https://github.com/ikevinadams/hogwarts-tv-home) by
-  **ikevinadams** (MIT), modified by Pantheon. The original project's README and guide are kept in `adult-space/`.
+  **ikevinadams** (MIT), modified by Pantheon. The original project's README and guide are kept in `docs/hogwarts-tv-home/`.
 - **The agentic remote's design**: [couch-tv](https://github.com/Seagey/couch-tv) by **Seagey** (MIT).
 
 Full notices, including the weather and news sources and the font, are in [NOTICE.md](NOTICE.md).
