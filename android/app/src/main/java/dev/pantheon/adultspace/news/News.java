@@ -96,7 +96,7 @@ public final class News {
     // once and says which row it belongs to; each row then takes only its own kind, in the feeds' order. Without the
     // agent's key: the feeds as they are, and a finance word list for the Iron Bank.
     private static final String[] ROWS = { "national", "world", "finance", "other" };
-    private static final java.util.regex.Pattern MONEY = java.util.regex.Pattern.compile("(?i)\\b(stocks?|shares|markets?|"
+    static final java.util.regex.Pattern MONEY = java.util.regex.Pattern.compile("(?i)\\b(stocks?|shares|markets?|"
             + "tsx|s&p|nasdaq|dow|investors?|earnings|profits?|revenue|inflation|interest rates?|rate cut|central bank|"
             + "bank of|economy|economic|gdp|recession|bonds?|yields?|dollar|loonie|rupee|sensex|nifty|crypto|bitcoin|ipo|merger|"
             + "acquisition|deal|tariffs?|trade|budget|deficit|debt|oil prices?|prices)\\b");

@@ -67,7 +67,7 @@ final class Services {
         return b.toString();
     }
 
-    private static String norm(String s) {
+    static String norm(String s) {                               // package-private: tested
         String n = s.toLowerCase(Locale.ROOT).replace("+", "plus").replaceAll("[^a-z0-9]", "");
         if (n.startsWith("amazonprimevideo")) n = "primevideo" + n.substring(16);         // the app is labelled "Prime Video"
         return n.replaceAll("plus$", "");
