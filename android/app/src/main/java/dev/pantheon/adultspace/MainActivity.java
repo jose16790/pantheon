@@ -321,6 +321,12 @@ public class MainActivity extends Activity {
         /** Pantheon: ask the agent what to watch; answers come back as pantheonCouncil.onPicks / onReasons / onError. */
         @JavascriptInterface public void council(String json) { agent.recommend(json); }
 
+        /** Pantheon: the Ledger, what the agent remembers about you (home/core/ledger.js). */
+        @JavascriptInterface public String ledger() { return agent.ledger(); }
+        @JavascriptInterface public void strikeFact(int i) { agent.strikeFact(i); }
+        @JavascriptInterface public void forgetOpened() { agent.forgetOpened(); }
+        @JavascriptInterface public void forgetEverything() { agent.forgetEverything(); }
+
         /** Pantheon: bring up the on-screen keyboard for the field the page just focused. */
         @JavascriptInterface public void keyboard() {
             runOnUiThread(() -> {

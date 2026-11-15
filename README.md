@@ -21,7 +21,7 @@ picks what to watch from *your* services; and a Hand of the King who answers any
   eight picks land in about 3–4 seconds with a line on why.
 - **The Hand of the King, a voice agent.** Press the mic and ask anything: live web search, headlines, US flight
   delays, TV control. Jev routes each request in ~0.3 s; he answers in character with an expressive ElevenLabs v3
-  voice (sighs, chuckles), and **remembers** you, on the device.
+  voice (sighs, chuckles), and **remembers** you, on the device, in a Ledger you can read and strike out.
 - **The Ravens.** National, world and finance headlines, each story sorted into its row by Jev.
 
 ![The Hand of the King answering](docs/media/hand-of-the-king.jpg)

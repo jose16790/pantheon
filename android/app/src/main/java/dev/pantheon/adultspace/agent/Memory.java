@@ -132,6 +132,14 @@ final class Memory {
         save("facts", out);
     }
 
+    synchronized void forgetOpened() { prefs.edit().remove("opened").apply(); }
+
+    /** For the Ledger: the facts and what's been opened, as the page shows them. */
+    synchronized org.json.JSONObject ledger() {
+        try { return new JSONObject().put("facts", facts()).put("opened", list("opened")); }
+        catch (Exception e) { return new JSONObject(); }
+    }
+
     synchronized void forgetAll() {
         prefs.edit().clear().apply();
         Log.i(Agent.TAG, "memory cleared");

@@ -38,7 +38,7 @@ flowchart LR
 | | **Feeds:** `weather/Weather` (location + Open-Meteo, 15 min), `news/News` (Google News, Jev-sorted rows, 15 min) | `weather/`, `news/` |
 | | **Control:** `control/AdbControl`, the only configuration / test channel (adb-only, see §6) | `control/` |
 | **Home page** | `index.html`: the shell (dock, sections, remote navigation, mascot) **inherited from hogwarts-tv-home** and extended through hooks | `home/index.html` |
-| | `core/`: theme engine, weather maths, headlines, the Council panel, the conversation scroll, the sleep countdown | `home/core/` |
+| | `core/`: theme engine, weather maths, headlines, the Council panel, the conversation scroll, the sleep countdown, the Ledger | `home/core/` |
 | | `themes/<id>/`: each theme self-contained (scene script, art, sprites, sound, the tools that made them) | `home/themes/got/`, `home/themes/hogwarts/` |
 | **Build** | `build.sh` copies `home/` into the app's assets (`android/app/src/main/assets/www`, which mirrors it) with TV-sized, pre-shaded art; `install.sh` sets a TV up end to end | root |
 
@@ -154,8 +154,9 @@ with their static shading and an **OLED black point** (near-blacks taken to true
   on the TV can swap the keys, spend credits or make the agent act. ([ADR 0004](adr/0004-adb-only-control-channel.md))
 - **Agent actions** are a closed, typed set (launch, key, volume, search, theme, sleep): no shell, no payments, no
   sign-ins, no free-form intents.
-- **Memory:** bounded (40 facts, 6 turns / 15 min), told never to store passwords, money or health details, and
-  erasable by voice ("forget everything").
+- **Memory:** bounded (40 facts, 6 turns / 15 min), told never to store passwords, money or health details,
+  visible and editable on screen (the Ledger, `core/ledger.js`: strike a fact, forget what you've watched, forget
+  everything), and erasable by voice ("forget everything").
 - **Repository:** secret scanning and push protection on; history scanned clean.
 
 ## 7. Failure modes

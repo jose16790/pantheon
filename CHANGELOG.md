@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- **The Ledger:** what the agent remembers about you, on screen (top-row book icon, or ask "what do you know about
+  me?"). Strike out a fact, forget what you've watched, or forget everything.
+
 ## 1.0.0 · 2026-11-15
 
 The first release of Pantheon as its own project.
