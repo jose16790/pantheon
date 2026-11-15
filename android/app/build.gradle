@@ -56,4 +56,7 @@ android {
 }
 
 dependencies {
+    // unit tests run on the computer (./test.sh); the app itself has no dependencies
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.json:json:20240303'      // the real org.json (Android's is only stubs off-device)
 }

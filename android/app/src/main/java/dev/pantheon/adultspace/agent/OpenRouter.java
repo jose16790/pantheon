@@ -59,7 +59,11 @@ final class OpenRouter {
                         .put(new JSONObject().put("role", "user").put("content", user)));
         if (web) body.put("plugins", new JSONArray().put(new JSONObject().put("id", "web").put("max_results", 4)));
         JSONObject r = Http.post("https://openrouter.ai/api/v1/chat/completions", headers(), body, timeoutMs);
-        String t = r.getJSONArray("choices").getJSONObject(0).getJSONObject("message").optString("content", "");
+        return clean(r.getJSONArray("choices").getJSONObject(0).getJSONObject("message").optString("content", ""));
+    }
+
+    /** A chat answer made fit to speak: citations, links and markdown out; performance cues ([chuckles]) kept. */
+    static String clean(String t) {
         return t.replaceAll(",?\\s*\\[[^\\]]*\\]\\((?:https?://)[^)]*\\)", "")       // [source](https://…) citations
                 .replaceAll("\\(?https?://\\S+\\)?", "")
                 .replaceAll("(?i)[,;]?\\s+(?:per|via|according to|from|source:?)\\s*(?=[.,;!?]|$)", "")   // "per [link]" leftovers
