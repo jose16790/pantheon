@@ -662,9 +662,12 @@
       .gotscroll { position: relative; display: inline-block; margin: 24px 0 0 6px; }
       .gotscroll .paper { padding: 11px 34px 12px; color: #3b2611; text-shadow: none; white-space: nowrap;
         font: italic 600 26px/1.25 Georgia, "Times New Roman", serif; letter-spacing: .01em;
-        background: linear-gradient(180deg, rgba(60,35,10,.28), rgba(0,0,0,0) 22%, rgba(0,0,0,0) 78%, rgba(60,35,10,.32)),
-                    linear-gradient(90deg, #c4a46c, #e4cf9f 10%, #eedfb8 50%, #e2ca97 90%, #c09f68);
-        box-shadow: 0 8px 22px rgba(0,0,0,.55); clip-path: inset(0 100% 0 0); }
+        /* frosted parchment: the hall shows through, blurred, behind a ~70% sheet (glass, but still easy to read) */
+        background: linear-gradient(180deg, rgba(255,250,235,.32), rgba(255,250,235,0) 30%, rgba(0,0,0,0) 75%, rgba(60,35,10,.22)),
+                    linear-gradient(90deg, rgba(196,164,108,.74), rgba(228,207,159,.70) 10%, rgba(238,223,184,.68) 50%, rgba(226,202,151,.70) 90%, rgba(192,159,104,.74));
+        -webkit-backdrop-filter: blur(10px) saturate(1.25); backdrop-filter: blur(10px) saturate(1.25);
+        border-top: 1px solid rgba(255,248,225,.55); border-bottom: 1px solid rgba(90,60,25,.35);
+        box-shadow: 0 8px 22px rgba(0,0,0,.45); clip-path: inset(0 100% 0 0); }
       .gotscroll .rod { position: absolute; top: -7px; bottom: -7px; width: 15px; border-radius: 8px;
         background: linear-gradient(90deg, #4a2f14, #a5814b 40%, #d8bd85 55%, #5b3b19); box-shadow: 0 4px 10px rgba(0,0,0,.6); }
       .gotscroll .rod::before, .gotscroll .rod::after { content: ""; position: absolute; left: 2px; width: 11px; height: 7px; border-radius: 3px;
