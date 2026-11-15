@@ -137,12 +137,12 @@
   function drawJet(t) {
     if (!jet) return;
     const sh = SHEET.breath, act = owl.act, [f0, f1] = sh ? sh.fire : [0, 0];
-    const live = act && act.k === "breath" && act.t > f0 && act.t < f1 + .25;
+    const live = act && act.k === "breath" && act.t > f0 && act.t < f1 + .06;     // only while the jaws are open
     if (!live || !jet.img.complete) { css(jet.cv, "visibility", "hidden"); return; }
     // straight out of the jaws, level, through the icon and out past it on the far side: the blast engulfs it
     const F = jet.F, [mx, my] = mouth(), tx = appX(owl.at) + owl.face * 90, ty = ICON_Y + 6;
     const ang = Math.atan2(ty - my, tx - mx), dist = Math.hypot(tx - mx, ty - my);
-    const grow = clamp((act.t - f0) / .32, 0, 1), die = clamp((f1 + .25 - act.t) / .35, 0, 1);
+    const grow = clamp((act.t - f0) / .32, 0, 1), die = clamp((f1 + .06 - act.t) / .22, 0, 1);
     const full = Math.max(240, dist + 40), len = full * ease(grow);
     const k = full / F.w;                                        // the footage's length, scaled to the blast
     css(jet.cv, "visibility", "visible");
@@ -272,7 +272,8 @@
       const [f0, f1] = b.fire, mid = Math.floor((f0 + f1) / 2 * b.fps);
       // stand beside the app, low on the floor in front of the dock, so that at full lunge the open jaws are level
       // with the icon's middle and GAP px to its side: the fire then leaves the mouth level, the way the head points
-      const reach = b.mouth[mid][0] - b.footX, rise = b.footY - b.mouth[mid][1], GAP = 80;
+      const reach = b.mouth[mid][0] - b.footX, rise = b.footY - b.mouth[mid][1], GAP = 92;
+      window.DOCK_CELL = 380; buildDock();                       // room between the apps for the dragon to land in
       const big = 1.12;                                     // a touch bigger than its sheets, to read from the sofa
       useMascot(D, D.idle.h * big, { up: D.hop.up, down: D.hop.down, end: D.hop.end, rate: 1.6 },
                 { perchDx: reach * big + GAP, perchY: () => ICON_Y + rise * big });
@@ -291,6 +292,7 @@
       if (jet) { jet.cv.remove(); jet = null; }
       for (const i in roast) if (roast[i].el) roast[i].el.style.filter = "";
       roast = {}; fire = [];
+      window.DOCK_CELL = 0; buildDock();
       useMascot(OWL_SHEETS, 128, { up: 0.65, down: 2.22, end: 3.0, rate: 1.7 });
       setFilms(FILMS_HP);
       const lib = $("#toLib"); if (lib && lib.firstChild) lib.firstChild.textContent = "The Library";

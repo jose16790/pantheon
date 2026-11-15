@@ -35,10 +35,21 @@ src_y = float((np.arange(H) * left ** 4).sum() / (left ** 4).sum())
 k = W_OUT / W
 w, h = W_OUT, round((y1 - y0) * k)
 
+# the footage's jet enters from the frame edge, a solid bar cut dead straight: taper it into a narrow, soft start, so
+# it leaves the jaws like breath from a throat (a cone: thin at x=0, its full width after NOZZLE px), fading in
+NOZZLE = 0.16 * W
+xs = np.arange(W)[None, :]; yy = np.arange(y0, y1)[:, None]
+u = np.clip(xs / NOZZLE, 0, 1); u = u * u * (3 - 2 * u)
+half = 7 + (H * 0.5 - 7) * u                                  # the cone's half-height, px in the source frame
+cone = 1 - np.clip(np.abs(yy - src_y) / half, 0, 1); cone = cone * cone * (3 - 2 * cone)   # soft all the way: no edge
+fade_in = np.clip(xs / (0.025 * W), 0, 1)
+taper = cone * fade_in
+
 frames, cells = [], []
 for fr in loop:
     rgb = fr[y0:y1]
-    a = np.clip((rgb.max(-1) - 6) / 235, 0, 1) ** 0.8    # brightness -> opacity (a little fuller than linear)
+    # brightness -> opacity; the footage's faint brownish glow around the jet (below ~40) is dropped: only real flame
+    a = np.clip((rgb.max(-1) - 40) / 200, 0, 1) ** 0.85 * taper
     col = np.where(a[..., None] > 0.004, rgb / np.maximum(a[..., None], 0.004), 0)
     rgba = np.dstack([col.clip(0, 255), a * 255]).astype(np.uint8)
     cells.append(Image.fromarray(rgba).resize((w, h), Image.LANCZOS))

@@ -382,7 +382,7 @@ const LOGOS = {
 const NO_LOGO = new Set();                                     // logo files that failed to load: those apps get their name
 function logoMissing(f) { if (NO_LOGO.has(f)) return; NO_LOGO.add(f); buildDock(); }
 const logoFor = e => (LOGOS[e.pkg] && !NO_LOGO.has(LOGOS[e.pkg].f) ? LOGOS[e.pkg] : null) || (e.pkg.startsWith("input:") && /playstation|\bps[345]\b/i.test(e.pkg + " " + e.label) ? LOGOS.playstation : null);
-const CELL = 292;
+let CELL = 292;                                               // one app's slot on the dock; a theme may ask for more room (DOCK_CELL)
 let DOCK_X = 84, APPS = [], cells = [];
 const dock = $("#dock");
 let app = parseInt(hash("app") || "2");
@@ -392,6 +392,7 @@ function buildDock() {
     return Object.assign({ n: e.label, target: e.pkg }, L || { size, dh: size, perch: 0.1 });
   });
   if (!APPS.length) APPS = [{ n: "Customise", target: "customise", size: 52, dh: 52, perch: 0.1 }];   // nothing chosen yet
+  CELL = Math.min(window.DOCK_CELL || 292, Math.floor(1860 / APPS.length));   // Pantheon: wider gaps if the theme asks, still on screen
   DOCK_X = (1920 - CELL * APPS.length) / 2;
   dock.style.left = DOCK_X + "px"; dock.style.width = CELL * APPS.length + "px";
   dock.innerHTML = "";

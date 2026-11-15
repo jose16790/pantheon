@@ -34,6 +34,24 @@
     body[data-theme="got"] #moonglow, body[data-theme="got"] #cloud1, body[data-theme="got"] #potG, body[data-theme="got"] #potP,
     body[data-theme="got"] #potA { display: none !important; }
     body[data-nogarden] #toGarden { display: none !important; }
+    /* Game of Thrones books: rustic. Worn leather, bronze bands, the art inlaid like a plate, a parchment label */
+    body[data-theme="got"] .spine .roman { margin-top: 3px; font-family: "Cinzel", Georgia, serif; font-weight: 700; font-size: 14px;
+                                           color: #d9b778; letter-spacing: .04em; }
+    body[data-theme="got"] .spine .stitle { font-family: "Cinzel", Georgia, serif; font-weight: 600; font-size: 13px; letter-spacing: .12em;
+                                            color: #c9a66a; text-transform: uppercase; }
+    body[data-theme="got"] .spine .star { visibility: hidden; }
+    body[data-theme="got"] .spine .bands { height: 6px; border-top: 2px solid #6e5532; border-bottom: 2px solid #6e5532;
+                                           background: linear-gradient(180deg, rgba(0,0,0,.45), rgba(150,115,60,.35), rgba(0,0,0,.45));
+                                           box-shadow: 0 1px 1px rgba(0,0,0,.6); }
+    body[data-theme="got"] .front.captioned img { position: absolute; left: 9px; top: 9px; width: calc(100% - 18px); height: calc(100% - 66px);
+                                                  border: 1px solid rgba(120,90,45,.9); box-shadow: 0 0 0 2px rgba(0,0,0,.55), inset 0 0 18px rgba(0,0,0,.7);
+                                                  filter: sepia(.28) saturate(.82) contrast(1.06) brightness(.9); }
+    body[data-theme="got"] .front.captioned::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 2;
+                                                     box-shadow: inset 0 0 22px rgba(0,0,0,.8), inset 0 0 3px rgba(0,0,0,.9); }
+    body[data-theme="got"] .front .cap { left: 9px; right: 9px; bottom: 9px; height: 44px; border: 1px solid #5a4320; border-radius: 2px;
+                                         background: radial-gradient(ellipse at 50% 40%, #d8c398 0%, #c2a774 55%, #9c7f4e 100%);
+                                         box-shadow: inset 0 0 10px rgba(80,50,20,.55), 0 1px 3px rgba(0,0,0,.6);
+                                         color: #2c1a0b; text-shadow: 0 1px 0 rgba(255,240,210,.35); font-size: 13px; letter-spacing: .05em; }
     #picker { position: absolute; z-index: 40; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 46px;
               background: radial-gradient(ellipse at 50% 30%, var(--panel-1), var(--panel-2) 75%); opacity: 0; pointer-events: none; transition: opacity .35s; }
     #picker.open { opacity: 1; }

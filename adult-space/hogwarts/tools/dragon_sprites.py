@@ -52,6 +52,27 @@ def key(rgb):
     return out
 
 
+def jaw_gap(al, tip_x, tip_y, tall):
+    """The open mouth. Its inside is solid (palate, tongue), so it's found from the head's profile: going down from
+    the snout tip, the front edge (the frontmost opaque pixel of each row) runs back along the upper jaw, cuts in
+    at the mouth (the notch), then juts out again at the lower jaw. Fire starts in the notch, level with it and
+    midway out between the two jaw tips. None if there's no notch (jaws shut)."""
+    y0, y1 = int(tip_y), int(tip_y + 0.24 * tall)
+    x_min = int(tip_x - 0.2 * tall)
+    rows = al[y0:y1, x_min:tip_x + 1] > 128
+    front = np.array([(np.nonzero(r)[0].max() if r.any() else -1) for r in rows], float)
+    if (front < 0).all():
+        return None
+    front[front < 0] = np.nan
+    lo = int(np.nanargmax(np.nan_to_num(front[len(front) // 3:], nan=-1)) + len(front) // 3)   # the lower jaw's tip
+    notch = int(np.nanargmin(front[:lo + 1]))                                                    # the deepest cut above it
+    depth = min(np.nanmax(front[:notch + 1]), front[lo]) - front[notch]
+    if notch == 0 or depth < 0.03 * tall:
+        return None
+    lower_tip = front[lo]
+    return x_min + (front[notch] + lower_tip) / 2, y0 + notch
+
+
 def bottom_front(alpha, x_from):
     """The lowest opaque row among columns right of x_from (the legs; the tail curls to the left)."""
     ys, xs = np.nonzero(alpha[:, x_from:] > 128)
@@ -90,16 +111,19 @@ for name, cl in clips.items():
     uy, ux = np.nonzero(used)
     x0, y0, x1, y1 = ux.min(), uy.min(), ux.max() + 1, uy.max() + 1
     cw, ch = round((x1 - x0) * k), round((y1 - y0) * k)
-    pieces, rects, mouth, lows = [], [], [], []
+    pieces, rects, mouth, lows, jaws_open = [], [], [], [], []
     for fr in cl:
         al = fr[..., 3]
         ys_, xs_ = np.nonzero(al > 128)
         if len(xs_):
-            mx = xs_.max()                                           # the snout: the dragon faces right
+            mx = xs_.max()                                           # the snout tip: the dragon faces right
             my = ys_[xs_ >= mx - 6].mean()
+            gap = jaw_gap(al, mx, my, tall) if name == "breath" else None
+            jaws_open.append(gap is not None)
+            if gap: mx, my = gap                                     # the mouth, between the jaws' tips
             mouth.append([round((mx - x0) * k, 1), round((my - y0) * k, 1)])
         else:
-            mouth.append(mouth[-1] if mouth else [0, 0])
+            mouth.append(mouth[-1] if mouth else [0, 0]); jaws_open.append(False)
         lows.append(bottom_front(al, x_legs))
         cell = Image.fromarray(fr[y0:y1, x0:x1]).resize((cw, ch), Image.LANCZOS)
         box = cell.getchannel("A").point(lambda v: 255 if v > 2 else 0).getbbox() or (0, 0, 1, 1)
@@ -116,10 +140,12 @@ for name, cl in clips.items():
     sheet.save(os.path.join(DIR, name + ".webp"), quality=84, method=6)
     m = dict(src=f"dragon/{name}.webp", n=len(rows), fps=fps, cw=cw, ch=ch, h=DRAGON_H,
              footX=round((foot[0] - x0) * k, 1), footY=round((foot[1] - y0) * k, 1), frames=rows)
-    if name == "breath":                                             # fire while the jaws are thrust forward
+    if name == "breath":                                             # fire only while the jaws are thrust forward AND open
         mx0 = mouth[0][0]
         reach = np.array([mo[0] - mx0 for mo in mouth])
-        on = np.nonzero(reach > 0.45 * reach.max())[0]
+        ok = (reach > 0.45 * reach.max()) & np.array(jaws_open)
+        runs = np.split(np.nonzero(ok)[0], np.nonzero(np.diff(np.nonzero(ok)[0]) > 1)[0] + 1)
+        on = max(runs, key=len)                                      # the longest stretch of open, forward jaws
         m["mouth"] = mouth
         m["fire"] = [round(on.min() / fps, 2), round((on.max() + 1) / fps, 2)]
         print(f"breath: jaws forward {m['fire'][0]}-{m['fire'][1]} s")
