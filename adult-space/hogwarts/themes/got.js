@@ -662,9 +662,9 @@
       .gotscroll { position: relative; display: inline-block; margin: 24px 0 0 6px; }
       .gotscroll .paper { padding: 11px 34px 12px; color: #3b2611; text-shadow: none; white-space: nowrap;
         font: italic 600 26px/1.25 Georgia, "Times New Roman", serif; letter-spacing: .01em;
-        /* frosted parchment: the hall shows through, blurred, behind a ~70% sheet (glass, but still easy to read) */
+        /* frosted parchment: the hall shows through, blurred, behind a ~50% sheet */
         background: linear-gradient(180deg, rgba(255,250,235,.32), rgba(255,250,235,0) 30%, rgba(0,0,0,0) 75%, rgba(60,35,10,.22)),
-                    linear-gradient(90deg, rgba(196,164,108,.74), rgba(228,207,159,.70) 10%, rgba(238,223,184,.68) 50%, rgba(226,202,151,.70) 90%, rgba(192,159,104,.74));
+                    linear-gradient(90deg, rgba(196,164,108,.54), rgba(228,207,159,.50) 10%, rgba(238,223,184,.48) 50%, rgba(226,202,151,.50) 90%, rgba(192,159,104,.54));
         -webkit-backdrop-filter: blur(10px) saturate(1.25); backdrop-filter: blur(10px) saturate(1.25);
         border-top: 1px solid rgba(255,248,225,.55); border-bottom: 1px solid rgba(90,60,25,.35);
         box-shadow: 0 8px 22px rgba(0,0,0,.45); clip-path: inset(0 100% 0 0); }
