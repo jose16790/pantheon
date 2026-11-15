@@ -6,6 +6,8 @@ picks what to watch from *your* services; and a Hand of the King who answers any
 
 ![The throne room home screen](docs/media/throne-room.jpg)
 
+▶ **[Watch the 54-second demo](https://github.com/jose16790/pantheon-tv-of-the-gods/releases/download/v1.0.0/brag.mp4)** ([vertical](https://github.com/jose16790/pantheon-tv-of-the-gods/releases/download/v1.0.0/brag-vertical.mp4)) · [Release v1.0.0](https://github.com/jose16790/pantheon-tv-of-the-gods/releases/tag/v1.0.0)
+
 ![MIT](https://img.shields.io/badge/license-MIT-c9a45c) ![Android TV](https://img.shields.io/badge/platform-Android%20TV%20%2F%20Google%20TV-2b2b2b)
 ![Jev](https://img.shields.io/badge/decisions-Jev%201.14-7a5a2e) ![DeepSeek](https://img.shields.io/badge/words-DeepSeek%20V4.1%20Flash-4b6aa8)
 ![ElevenLabs](https://img.shields.io/badge/voice-ElevenLabs%20v3-333) ![tests](https://img.shields.io/badge/tests-./test.sh-3a7a3a)
