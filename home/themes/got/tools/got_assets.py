@@ -39,7 +39,6 @@ BAKE = {   # the gradients of #hshade and #lvig in index.html (as in tv_assets.p
                            lambda X, Y: radial(X, Y, .55, .45, .80, .70, [(0, 0), (.60, 0), (1, .45), (9, .45)])],
     "themes/got/img/shelf.jpg": [lambda X, Y: radial(X, Y, .51, .50, .80, .75, [(0, 0), (.58, 0), (1, .50), (9, .50)])],
 }
-NIGHT = ("themes/got/img/throne.jpg", "themes/got/img/shelf.jpg")   # the room at night and the library: true black
 sys.path.insert(0, os.path.join(SRC, "tools")); from oled import oled
 for v in ("overcast", "day", "golden"):   # the room by day and at golden hour (the weather wizard crossfades them)
     BAKE[f"themes/got/img/throne_{v}.jpg"] = BAKE["themes/got/img/throne.jpg"]
@@ -48,7 +47,7 @@ for rel, alphas in BAKE.items():
     im = Image.open(os.path.join(SRC, rel)).convert("RGB")
     im = im.resize((WIDE, round(WIDE * im.height / im.width)), Image.LANCZOS)
     out = shaded(im, alphas)
-    if rel in NIGHT: out = oled(out)                                   # true black on OLED screens (tools/oled.py)
+    out = oled(out)                                                    # true black on OLED screens, at every hour (tools/oled.py)
     out.save(os.path.join(OUT, rel), quality=90)
     print(rel, im.size)
 os.makedirs(os.path.join(OUT, "themes", "got", "dragon"), exist_ok=True)
