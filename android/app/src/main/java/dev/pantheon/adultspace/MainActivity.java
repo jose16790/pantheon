@@ -235,6 +235,7 @@ public class MainActivity extends Activity {
             idle.postDelayed(() -> lastInput = System.currentTimeMillis() - sleepAfter() + left * 1000L, 1500);
         }
         // testing the agentic remote: adb shell am start ... --es council '{"minutes":45,"like":"like Severance"}'
+        if (intent.getBooleanExtra("fresh_conversation", false)) agent.forgetConversation();   // testing: a new conversation
         String ask = intent.getStringExtra("ask");                       // testing the voice: as if said to the mic
         if (ask != null) voice.handleText(ask);
         String council = intent.getStringExtra("council");
