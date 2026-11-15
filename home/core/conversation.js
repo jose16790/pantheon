@@ -16,6 +16,7 @@
                opacity: 0; transition: opacity .5s; }
       #convo.show { opacity: 1; }
       body.council-open #convo { top: auto; bottom: 34px; }
+      body.convo-open #news { opacity: .12; transition: opacity .5s; }        /* the headlines step back while it's shown */
       #convo .paper { position: relative; padding: 26px 44px 28px; color: #2b190a; text-shadow: none;
         background: linear-gradient(90deg, rgba(60,35,10,.30), rgba(0,0,0,0) 7%, rgba(0,0,0,0) 93%, rgba(60,35,10,.32)),
                     linear-gradient(180deg, rgba(204,174,120,.86), rgba(236,221,186,.84) 12%, rgba(240,228,198,.84) 50%, rgba(230,212,170,.85) 88%, rgba(200,170,115,.88));
@@ -56,12 +57,12 @@
     el.querySelector(".king .who").textContent = w[0];
     el.querySelector(".hand .who").textContent = w[1];
     clearTimeout(hideT);
-    el.classList.add("show");
+    el.classList.add("show"); document.body.classList.add("convo-open");
     const old = document.getElementById("voice"); if (old) old.classList.remove("show");   // the old one-line banner
   }
   function close(after) {
     clearTimeout(hideT);
-    hideT = setTimeout(() => { if (el) el.classList.remove("show"); }, after || 0);
+    hideT = setTimeout(() => { if (el) el.classList.remove("show"); document.body.classList.remove("convo-open"); }, after || 0);
   }
   window.pantheonConvoClose = () => { if (el && el.classList.contains("show")) { close(0); return true; } return false; };
 
@@ -109,7 +110,9 @@
       const t = state === "error" ? (text || "Something went wrong") : replyText(text);
       if (!t) return;
       const spoken = Date.now() - lastHandAt < 25000;                   // the agent's voice is saying (or about to say) something
-      if (spoken && t !== current) { note.textContent = t; note.classList.add("on"); }
+      const same = s => s && s.replace(/\W+/g, "") === t.replace(/\W+/g, "");
+      if (spoken && (same(current) || Object.values(pending).some(same))) return;   // that's what the voice is saying: no second copy
+      if (spoken) { note.textContent = t; note.classList.add("on"); }
       else if (!spoken) handSays(t);
     }
     else if (state === "idle") close(1500);

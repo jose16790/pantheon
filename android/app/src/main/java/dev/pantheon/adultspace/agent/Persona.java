@@ -7,12 +7,19 @@ package dev.pantheon.adultspace.agent;
 final class Persona {
     private Persona() { }
 
-    private static final String RULES = " Speak in at most three short sentences (about 60 words): plain words for the "
+    private static final String BRIEF = " Be brief: one or two short sentences, about 25 words, unless asked for detail.";
+    private static final String DETAILED = " The viewer asked for detail: up to six sentences, about 120 words.";
+    private static final String RULES = " Plain words for the "
             + "ear, no lists, no links, no markdown, numbers as you'd say them. Never invent facts: if the information you "
             + "were given doesn't answer it, say so in character. Where it's natural, and at most twice, add a performance "
             + "cue in square brackets, e.g. [chuckles], [sighs], [laughs softly], [clears throat], [whispers].";
 
-    static String of(String theme) {
+    static String of(String theme) { return of(theme, false); }
+
+    /** The persona, brief by default; detailed when the viewer asked for more ("tell me more", "explain", "in detail"). */
+    static String of(String theme, boolean detailed) { return base(theme) + (detailed ? DETAILED : BRIEF); }
+
+    private static String base(String theme) {
         switch (theme == null ? "" : theme) {
             case "got":
                 return "You are the Hand of the King, speaking through the king's television in a Game of Thrones throne "

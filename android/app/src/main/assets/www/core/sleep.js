@@ -37,6 +37,7 @@
   window.pantheonSleep = {
     start(seconds) {
       if (!el) build();
+      if (window.pantheonConvoClose) pantheonConvoClose();             // the conversation scroll steps aside
       const w = WORDS[document.body.dataset.theme] || WORDS._;
       el.querySelector(".h").textContent = w[0]; el.querySelector(".s").textContent = w[1]; el.querySelector(".k").textContent = w[2];
       total = 30; left = Math.min(30, Math.round(seconds)); draw();
