@@ -31,6 +31,7 @@ home/                       the home screen: one page, shared by every theme
     council.js              the Small Council: the agentic remote's panel
     conversation.js         the voice conversation on a scroll (The King / The Hand)
     sleep.js                the sleep timer's countdown
+    ledger.js               the Ledger: what the agent remembers about you, to read and strike out
   fonts/                    Cinzel (SIL OFL)
   img/logos/                the dock's app logos (fetched)
   themes/
@@ -226,7 +227,12 @@ Press the mic and ask anything. Simple commands still run instantly on the TV; e
 **He remembers.** The last few exchanges (15 minutes), so follow-ups work ("and what about San Francisco?", "tell me
 more", "play the second one"); and up to 40 short facts about you, learnt from what you say ("follows NVIDIA and AI
 news") or told directly ("remember that I don't like horror"). Ask "what do you know about me?", or have him forget one
-thing or everything. The facts shape his answers and the Council's picks (and titles you've opened aren't suggested
+thing or everything.
+
+**The Ledger** (the book icon on the top row; also opens when you ask what he knows about you) shows it all on
+parchment: every fact with the day it was learnt, and the titles you've opened from Pantheon. OK on a fact strikes it
+out and he forgets it; at the bottom, forget what you've watched, or burn the lot (OK twice). Each theme names it its
+own way: the Ledger, the Headmaster's Notes. The facts shape his answers and the Council's picks (and titles you've opened aren't suggested
 again). It's all kept only on the TV, in Pantheon's private storage.
 
 He answers in character (loyal, shrewd, dry; "Your Grace") in a deep, expressive voice: ElevenLabs v3, which

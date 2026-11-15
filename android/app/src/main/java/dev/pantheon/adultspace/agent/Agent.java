@@ -55,6 +55,15 @@ public final class Agent {
 
     private String theme() { return act.themeId(); }
 
+    // ---------------------------------------------------------------- the Ledger (home/core/ledger.js)
+    /** What the agent remembers about you: {facts: [{t, at}], opened: [{title, at}]}. */
+    public String ledger() { return memory.ledger().toString(); }
+
+    /** Strike one fact (its index in the list), forget what's been watched, or forget everything. */
+    public void strikeFact(int i) { memory.removeFacts(new JSONArray().put(i)); }
+    public void forgetOpened() { memory.forgetOpened(); }
+    public void forgetEverything() { memory.forgetAll(); }
+
     /** Testing: start a fresh conversation (the facts it knows about you stay). */
     public void forgetConversation() { pool.execute(memory::clearConversation); }
 
@@ -239,6 +248,7 @@ public final class Agent {
         if ("remember".equals(action)) memory.addFact(r.optString("fact"));
         else if ("forget".equals(action)) memory.removeFacts(r.optJSONArray("remove"));
         else if ("forget_all".equals(action)) memory.forgetAll();
+        if ("recall".equals(action)) ui(() -> js.accept("window.pantheonLedger && pantheonLedger.show()"));   // and show it
         Log.i(TAG, "memory: " + action + (r.optString("fact").isEmpty() ? "" : " \"" + r.optString("fact") + "\"") + "; says: " + Speaker.plain(r.optString("reply")));
         String out = r.optString("reply", "");
         speaker.say(theme(), out);
