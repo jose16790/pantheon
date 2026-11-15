@@ -7,9 +7,9 @@ import android.widget.Toast;
 
 import org.json.JSONObject;
 
-import dev.pantheon.adultspace.R;
 import dev.pantheon.adultspace.theme.ThemeManager;
 import dev.pantheon.adultspace.voice.AgentClient;
+import dev.pantheon.adultspace.voice.AgentConfig;
 import dev.pantheon.adultspace.voice.VoiceAgent;
 
 /**
@@ -22,7 +22,7 @@ public final class ListenActivity extends Activity {
     @Override protected void onCreate(Bundle state) {
         super.onCreate(state);
         ThemeManager themes = new ThemeManager(this);
-        voice = new VoiceAgent(this, new AgentClient(getString(R.string.agent_url)), () -> themes.current().id(), this::onVoice);
+        voice = new VoiceAgent(this, new AgentClient(() -> AgentConfig.url(this)), () -> themes.current().id(), this::onVoice);
         if (state == null) voice.listen();
     }
 

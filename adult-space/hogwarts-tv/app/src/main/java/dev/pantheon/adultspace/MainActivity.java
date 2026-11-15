@@ -46,6 +46,7 @@ import java.util.Map;
 import dev.pantheon.adultspace.theme.ThemeData;
 import dev.pantheon.adultspace.theme.ThemeManager;
 import dev.pantheon.adultspace.voice.AgentClient;
+import dev.pantheon.adultspace.voice.AgentConfig;
 import dev.pantheon.adultspace.voice.VoiceAgent;
 
 /**
@@ -99,10 +100,12 @@ public class MainActivity extends Activity {
         String asked = getIntent().getStringExtra("theme");               // adb shell am start ... --es theme got
         if (asked != null) themes.set(asked);
         getWindow().getDecorView().setBackgroundColor(themes.current().windowBackground());
-        voice = new VoiceAgent(this, new AgentClient(getString(R.string.agent_url)), () -> themes.current().id(),
+        String agentAsked = getIntent().getStringExtra("agent_url");           // adb shell am start ... --es agent_url http://...
+        if (agentAsked != null) AgentConfig.set(this, agentAsked);
+        voice = new VoiceAgent(this, new AgentClient(() -> AgentConfig.url(this)), () -> themes.current().id(),
                 (vs, text) -> web.evaluateJavascript("window.pantheonVoice && pantheonVoice(" + JSONObject.quote(vs) + ","
                         + (text == null ? "null" : JSONObject.quote(text)) + ")", null));
-        Log.i(AgentClient.TAG, "agent endpoint: " + getString(R.string.agent_url) + " · theme: " + themes.current().id());
+        Log.i(AgentClient.TAG, "agent endpoint: " + AgentConfig.url(this) + " · theme: " + themes.current().id());
         if ((getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0) WebView.setWebContentsDebuggingEnabled(true);
 
         web = new WebView(this);
@@ -163,6 +166,8 @@ public class MainActivity extends Activity {
         super.onNewIntent(intent);
         String asked = intent.getStringExtra("theme");
         if (asked != null && themes.set(asked)) applyTheme();
+        String agentAsked = intent.getStringExtra("agent_url");
+        if (agentAsked != null) AgentConfig.set(this, agentAsked);
         if (intent.hasCategory(Intent.CATEGORY_HOME)) { isHome = true; web.evaluateJavascript("window.tvHome && tvHome()", null); }
     }
 

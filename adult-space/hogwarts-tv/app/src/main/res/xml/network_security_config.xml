@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- HTTPS everywhere, except the agent on the home network (agent_url in strings.xml). Change the host here if the Pi moves. -->
+<!-- Plain http is allowed so the agent can live on any home-network address (this Mac now, the Pi later; see
+     voice/AgentConfig.java). AgentClient itself refuses plain http to anything that isn't a local address. -->
 <network-security-config>
-    <base-config cleartextTrafficPermitted="false" />
-    <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="false">192.168.1.100</domain>
-    </domain-config>
+    <base-config cleartextTrafficPermitted="true" />
 </network-security-config>

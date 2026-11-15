@@ -17,9 +17,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Supplier;
 
 /**
- * Sends a spoken prompt to the Pantheon agent (the Raspberry Pi backend) and logs what comes back.
+ * Sends a spoken prompt to the Pantheon agent (agent/server.py: this Mac for now, the Raspberry Pi later) and logs
+ * what comes back. The address is {@link AgentConfig#url}.
  *
  *   POST {agent_url}     Content-Type: application/json
  *   {"prompt": "...", "source": "voice", "space": "adult", "theme": "hogwarts", "device": "...", "ts": 1731600000000}
@@ -41,15 +43,15 @@ public final class AgentClient {
         void onError(String message);
     }
 
-    private final String url;
+    private final Supplier<String> address;
     private final ExecutorService io = Executors.newSingleThreadExecutor();
 
-    public AgentClient(String url) { this.url = url; }
-
-    public String url() { return url; }
+    /** The address is read again for every request, so a new one applies at once. */
+    public AgentClient(Supplier<String> address) { this.address = address; }
 
     public void send(String prompt, String theme, Callback cb) {
         io.execute(() -> {
+            String url = address.get();
             String host = host(url);
             if (url.startsWith("http://") && !isLocalHost(host)) {
                 String m = "Refusing plain http to a non-local host: " + host;

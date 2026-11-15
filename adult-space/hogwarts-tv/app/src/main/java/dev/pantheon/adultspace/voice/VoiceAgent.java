@@ -133,16 +133,31 @@ public final class VoiceAgent {
     private void handle(String text) {
         String prompt = text.trim();
         Log.i(TAG, "heard: \"" + prompt + "\"");
+        // Simple commands (open an app, pause, volume...) are done right here on the TV: no agent needed.
+        String local = LocalCommands.tryRun(act, prompt);
+        if (local != null) {
+            state("reply", org.json.JSONObject.quote(local).replaceFirst("^", "{\"reply\":") + "}");
+            return;
+        }
         state("heard", prompt);
         agent.send(prompt, theme.get(), new AgentClient.Callback() {
             @Override public void onReply(int status, String body) {
-                act.runOnUiThread(() -> state(status < 400 ? "reply" : "error", status < 400 ? body : "Agent answered " + status));
+                act.runOnUiThread(() -> {
+                    if (status < 400) Actions.run(act, body);      // the agent thinks, the TV acts (voice/Actions.java)
+                    state(status < 400 ? "reply" : "error", status < 400 ? body : "Agent answered " + status);
+                });
             }
             @Override public void onError(String message) {
-                act.runOnUiThread(() -> state("error", "Couldn't reach the agent"));
+                act.runOnUiThread(() -> state("error", "That one needs the agent, and it isn't running at " + host(agent)
+                        + ". I can do “open YouTube”, “pause”, “volume up” and “search for…” by myself."));
             }
         });
     }
 
     private void state(String s, String text) { ui.onVoiceState(s, text); }
+
+    private String host(AgentClient a) {
+        String h = AgentClient.host(AgentConfig.url(act));
+        return h == null ? "its address" : h;
+    }
 }

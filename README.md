@@ -60,15 +60,44 @@ adb install -r dist/Pantheon-adult-space.apk
 
 The release build offers itself as a home screen. Choose it when you press Home, or set it as the default.
 
+## Voice
+
+**Simple commands run on the TV itself**, with no agent and no network (`voice/LocalCommands.java`):
+
+| Say | Does |
+|---|---|
+| "open YouTube" / "launch Disney Plus" / "go to Crave" | opens that app (any installed app, by name) |
+| "go home" | the home screen |
+| "pause" / "play" / "next" / "previous" | media keys for whatever is playing |
+| "volume up" / "louder" / "mute" | volume, one step |
+| "set volume to 30" / "volume up by three" / "turn it down 5" | volume to a level (percent) or by steps |
+| "search for Dune" / "find The Bear" | the TV's own search |
+
+**Everything else goes to the agent** (below). Its reply can include actions for the TV to run
+(`voice/Actions.java`), so the agent decides and the TV acts:
+
+```json
+{"reply": "Opening Disney+", "actions": [{"type": "launch", "app": "Disney+"}]}
+```
+
+Action types: `launch {app}`, `key {key: home|play_pause|play|pause|next|previous|volume_up|volume_down|mute}`,
+`search {query}`.
+
+Move the agent without rebuilding:
+
+```bash
+adb shell am start -n dev.pantheon.adultspace/.MainActivity --es agent_url http://192.168.0.100:8080/agent
+```
+
 ## Voice agent
 
 | What | Where |
 |---|---|
-| Endpoint | `agent_url` in `hogwarts-tv/app/src/main/res/values/strings.xml` (default `http://192.168.1.100:8080/agent`) |
-| Plain-http allow-list | `res/xml/network_security_config.xml` (only the agent's host) |
+| Endpoint | saved with `--es agent_url …` (above); built-in default `agent_url` in `res/values/strings.xml` |
+| Plain http | allowed only to home-network addresses (checked in `AgentClient.java`) |
 | Request | `POST {"prompt", "source":"voice", "space":"adult", "theme", "device", "ts"}` |
 | Response | logged in full. Shown on screen if JSON with `reply`/`text`/`message`, or as plain text |
-| Logs | `adb logcat -s Pantheon/Agent Pantheon/Voice Pantheon/Assist Pantheon/Keys` |
+| Logs | `adb logcat -s Pantheon/Agent Pantheon/Voice Pantheon/Local Pantheon/Actions Pantheon/Assist Pantheon/Keys` |
 
 Ways to start listening:
 
