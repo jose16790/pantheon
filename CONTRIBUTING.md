@@ -39,6 +39,11 @@ rights to. AI-generated art is fine when generated for the project; say how it w
 Never commit keys, tokens, keystores or `.env` files. Agent keys belong on the TV (`scripts/agent-keys.sh`); the
 repo has secret scanning and push protection on.
 
+## Releases (maintainer)
+
+`scripts/make-release-key.sh` once (your own signing key, never committed), then `scripts/release.sh vX.Y.Z`:
+checks, a signed APK, a tag and a GitHub Release with notes from `CHANGELOG.md`.
+
 ## Security issues
 
 Please don't open a public issue: see [SECURITY.md](SECURITY.md).
