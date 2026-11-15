@@ -3,6 +3,7 @@
     writes  img/got/torch.webp            a seamless loop of the flame, see-through (black made clear)
             img/got/torch.js              window.TORCH_SHEET = {src, n, fps, w, h, frames}
             sounds/got/fire.mp3           the crackle, louder, looped without a seam
+            sounds/got/fire.js            the same, as window.FIRE_SOUND (base64), for Web Audio
 The clip also drew a glowing stub under the flame; only the flame above it is kept (the photo's iron baskets are the
 base). The loop's end is cross-faded into its start, so it never visibly restarts. Run with numpy + scipy + Pillow + ffmpeg."""
 import json, os, subprocess
@@ -23,9 +24,9 @@ W, H = map(int, subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v"
 raw = subprocess.run(["ffmpeg", "-v", "error", "-i", CLIP, "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], capture_output=True, check=True).stdout
 clip = np.frombuffer(raw, np.uint8).reshape(-1, H, W, 3).astype(np.float32)
 # fire moves too fast to cross-fade over long without ghosting, so the loop ends where the flame looks most like it
-# did at the start (searched over 1.5-3 s), and only the last few frames blend
+# did at the start (searched from 3.5 s on), and only the last few frames blend
 small = clip[:, ::8, ::8].max(-1)
-cands = range(START + 36, min(len(clip) - FADE, START + 72))
+cands = range(START + 84, len(clip) - FADE)   # a long loop (3.5 s+): a short one is seen repeating
 LOOP = min(cands, key=lambda j: np.abs(small[j] - small[START]).mean()) - START
 seg = clip[START:START + LOOP + FADE]
 loop = seg[:LOOP].copy()
@@ -87,3 +88,8 @@ body[:xf] = body[:xf] * ramp + tail * (1 - ramp)         # play body on repeat: 
 subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "f32le", "-ar", str(sr), "-ac", "2", "-i", "-", "-b:a", "128k",
                 os.path.join(SRC, "sounds/got/fire.mp3")], input=body.astype(np.float32).tobytes(), check=True)
 print(f"fire.mp3: {len(body) / sr:.2f} s loop")
+# the same sound as a script, so the page's Web Audio can decode it (a page in the TV app can't fetch its own files):
+# the theme plays overlapping random snippets of it, so the crackle never audibly loops
+import base64
+with open(os.path.join(SRC, "sounds/got/fire.mp3"), "rb") as f, open(os.path.join(SRC, "sounds/got/fire.js"), "w") as o:
+    o.write("// made by tools/got_torch.py: sounds/got/fire.mp3, for Web Audio\nwindow.FIRE_SOUND = \"" + base64.b64encode(f.read()).decode() + "\";\n")

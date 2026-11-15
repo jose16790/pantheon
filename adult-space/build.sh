@@ -38,7 +38,7 @@ else
   mkdir -p "$WWW/fonts" "$WWW/img/got/covers"; cp "$HERE/hogwarts/fonts/"* "$WWW/fonts/"
   cp "$HERE/hogwarts/img/got/covers/"*.jpg "$WWW/img/got/covers/"
   cp "$HERE/hogwarts/img/got/glass.png" "$HERE/hogwarts/img/got/clouds_"*.webp "$HERE/hogwarts/img/got/torch".* "$WWW/img/got/"
-  mkdir -p "$WWW/sounds/got"; cp "$HERE/hogwarts/sounds/got/"*.mp3 "$WWW/sounds/got/"   # fire, music (and your own: scripts/add-music.sh)
+  mkdir -p "$WWW/sounds/got"; cp "$HERE/hogwarts/sounds/got/"*.mp3 "$HERE/hogwarts/sounds/got/"*.js "$WWW/sounds/got/"   # fire, music (and your own: scripts/add-music.sh)
 fi
 
 (cd "$HERE/hogwarts-tv" && ./gradlew assembleRelease --console=plain -q)

@@ -14,7 +14,7 @@
 
   // the torch flames in img/got/throne.jpg, in the photo's 1935 x 1080 frame (measured from the picture): x, y of
   // the flame's base, and its height
-  const SCONCES = [{ x: 1760, y: 334, h: 112 }, { x: 182, y: 338, h: 112 }, { x: 390, y: 461, h: 80 }, { x: 1535, y: 466, h: 80 }];
+  const SCONCES = [{ x: 1748, y: 348, h: 112 }, { x: 182, y: 350, h: 112 }, { x: 402, y: 471, h: 80 }, { x: 1525, y: 473, h: 80 }];   // each basket's centre, just inside its rim (photo px)
 
   const SEASONS = [   // [year, episodes, leather colour, what happens (four words at most)]
     [2011, 10, "#5c1c16", "Ned Stark loses everything"], [2012, 10, "#2a3644", "Battle of the Blackwater"], [2013, 10, "#4a2a1a", "The Red Wedding"],
@@ -97,7 +97,7 @@
       Object.assign(cv.style, { position: "absolute", left: (s.x - w / 2) + "px", top: (s.y - h * 0.86) + "px",
                                 width: w + "px", height: h + "px", pointerEvents: "none" });
       box.appendChild(cv);
-      return { s, cv, g: cv.getContext("2d"), w, h, img, T, phase: i * 9.7 + Math.random() * 3, rate: .9 + Math.random() * .25, seed: Math.random() * 10 };
+      return { s, cv, g: cv.getContext("2d"), w, h, img, T, phase: i * 9.7 + Math.random() * 3, rate: .55 + Math.random() * .12, seed: Math.random() * 10 };
     });
   }
   function drawSconces(t, dt) {
@@ -105,16 +105,18 @@
     const dark = sky && sky.wx ? sky.wx.light.dark : 1, bright = .55 + .45 * dark;
     for (const sc of sconces) {
       const { g, s, cv } = sc, k = cv.width / sc.w;
-      const flick = .82 + .18 * Math.sin(t * 9.3 + sc.seed) * Math.sin(t * 3.7 + sc.seed * 2);
+      const flick = .88 + .12 * Math.sin(t * 2.9 + sc.seed) * Math.sin(t * 1.3 + sc.seed * 2);   // a slow breathing glow
       g.setTransform(k, 0, 0, k, 0, 0); g.clearRect(0, 0, sc.w, sc.h);
       g.globalAlpha = .5 * flick * bright; g.globalCompositeOperation = "lighter";
       g.drawImage(sprites.glow, sc.w / 2 - s.h * .7, sc.h * .86 - s.h * 1.05, s.h * 1.4, s.h * 1.4);
       g.globalCompositeOperation = "source-over";
       if (sc.img && sc.img.complete && sc.img.naturalWidth) {
-        const T = sc.T, f = Math.floor((t * sc.rate + sc.phase) * T.fps) % T.n, [fx, fy] = T.frames[f];
-        const fh = s.h * 1.18, fw = fh * T.w / T.h;
-        g.globalAlpha = Math.min(1, .7 + .3 * flick) * (.75 + .25 * dark);
-        g.drawImage(sc.img, fx, fy, T.w, T.h, sc.w / 2 - fw / 2, sc.h * .86 - fh, fw, fh);
+        // played slower than filmed, so each frame is blended into the next (no stepping)
+        const T = sc.T, pos = (t * sc.rate + sc.phase) * T.fps, f = Math.floor(pos) % T.n, mix = pos - Math.floor(pos);
+        const fh = s.h * 1.18, fw = fh * T.w / T.h, x = sc.w / 2 - fw / 2, y = sc.h * .86 - fh, a = .8 + .2 * dark;
+        const [fx, fy] = T.frames[f], [nx, ny] = T.frames[(f + 1) % T.n];
+        g.globalAlpha = a; g.drawImage(sc.img, fx, fy, T.w, T.h, x, y, fw, fh);
+        g.globalAlpha = a * mix; g.drawImage(sc.img, nx, ny, T.w, T.h, x, y, fw, fh);
       }
     }
   }
@@ -357,13 +359,14 @@
   }
 
   // ---------------------------------------------------------------- sound: the fire, the music, and the weather outside
-  // Fire crackle (sounds/got/fire.mp3, from the torch footage), looped by two players taking turns and cross-fading
-  // (the TV's player pauses for a moment each time it restarts a looping file). Music: your own track
+  // Fire crackle (sounds/got/fire.js: the torch footage's sound): an endless, never-repeating bed (and a soft roar) made of overlapping
+  // snippets from random points in it, each faded in and out (Web Audio). Without Web Audio, two players take turns
+  // with sounds/got/fire.mp3, cross-fading. Music: your own track
   // (sounds/got/music-local.mp3, see scripts/add-music.sh), if there is one, plays once each time you come to the
   // home; then the original score (sounds/got/music.mp3) loops. Rain, wind and thunder are synthesised to fit the weather
   // (Web Audio: filtered noise), so they never loop audibly. Quiet by default; muted from the top row; silent
   // whenever an app is open (the TV app calls pause/resume).
-  const VOL = { fire: .16, music: .14, rain: .22, wind: .2, thunder: .55 };
+  const VOL = { fire: .14, music: .14, rain: .22, wind: .2, thunder: .55 };
   const audio = { on: false, muted: (() => { try { return localStorage.getItem("pantheon_mute") === "1"; } catch (e) { return false; } })(), paused: false };
   function startAudio() {
     if (audio.fire) return;
@@ -389,7 +392,34 @@
       // wind: a band of noise whose pitch and loudness gust
       audio.wind = ac.createGain(); audio.wind.gain.value = 0; audio.wind.connect(audio.master);
       const wf = audio.windF = ac.createBiquadFilter(); wf.type = "bandpass"; wf.frequency.value = 380; wf.Q.value = 1.4; src().connect(wf); wf.connect(audio.wind);
+      // the crackle's bed
+      audio.fireBus = ac.createGain(); audio.fireBus.gain.value = 0; audio.fireBus.connect(audio.master);
+      const rl = ac.createBiquadFilter(), rh = ac.createBiquadFilter(), rg = ac.createGain();   // and a soft, steady roar under it
+      rl.type = "lowpass"; rl.frequency.value = 700; rh.type = "highpass"; rh.frequency.value = 90; rg.gain.value = .18;   // 9 dB under the crackle
+      src().connect(rl); rl.connect(rh); rh.connect(rg); rg.connect(audio.fireBus);
+      if (window.FIRE_SOUND) {
+        const bin = atob(FIRE_SOUND), u = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+        const done = b => { audio.fireBuf = b; audio.fire.forEach(f => f.pause()); };
+        const p = ac.decodeAudioData(u.buffer, done, () => { });
+        if (p && p.catch) p.catch(() => { });
+      }
     } catch (e) { audio.ac = null; }
+  }
+  const GRAIN = 3, HOP = .75, SINE = new Float32Array(65).map((_, i) => Math.sin(Math.PI * i / 64) * Math.sqrt(2 * HOP / GRAIN));
+  function fireGrains() {                      // keep the next ~half second of snippets scheduled
+    const ac = audio.ac, buf = audio.fireBuf, now = ac.currentTime;
+    if (!audio.nextGrain || audio.nextGrain < now) audio.nextGrain = now + .05;
+    while (audio.nextGrain < now + .5) {
+      // 3 s snippets, a new one every .75 s, each under a sine-shaped fade: four always overlap, so the loudness
+      // stays even (measured: within ~2 dB, which is just the crackle's own pops)
+      const at = audio.nextGrain, dur = GRAIN, off = Math.random() * (buf.duration / .9 - dur - .1);
+      const src = ac.createBufferSource(), g = ac.createGain();
+      src.buffer = buf; src.playbackRate.value = .94 + Math.random() * .12;
+      g.gain.setValueAtTime(0, at); g.gain.setValueCurveAtTime(SINE, at, dur);
+      src.connect(g); g.connect(audio.fireBus); src.start(at, Math.max(0, off * .9), dur * 1.1);
+      audio.nextGrain = at + HOP;
+    }
   }
   function playTheme() { audio.theme = true; audio.music.loop = false; audio.music.src = "sounds/got/music-local.mp3"; }
   function toScore() {
@@ -414,7 +444,8 @@
     if (live && m.paused && m.src) m.play().catch(() => { }); else if (!live && !m.paused && audio.musicLvl < .01) m.pause();
     // the crackle: as the playing copy nears its end, the other starts from the top; each fades in and out by its position
     const XF = .8, [a, b] = [audio.fire[audio.cur], audio.fire[1 - audio.cur]];
-    if (!live && audio.fireLvl < .01) audio.fire.forEach(f => f.paused || f.pause());
+    if (audio.fireBuf) { audio.fireBus.gain.value = audio.fireLvl; if (live) fireGrains(); }
+    else if (!live && audio.fireLvl < .01) audio.fire.forEach(f => f.paused || f.pause());
     else {
       if (a.paused && (!a.duration || a.currentTime < a.duration - .05)) a.play().catch(() => { });
       if (a.duration && a.currentTime > a.duration - XF && b.paused) { b.currentTime = 0; b.play().catch(() => { }); audio.cur = 1 - audio.cur; }
@@ -440,6 +471,7 @@
     thunder, get muted() { return audio.muted; },
     get _music() { return audio.music; },                                  // (for testing)
     get state() { return audio.fire && { music: audio.music.src.split("/").pop(), at: +audio.music.currentTime.toFixed(1), loop: audio.music.loop,
+                                         grains: audio.fireBuf ? +audio.fireBus.gain.value.toFixed(3) : "off", next: audio.nextGrain && +(audio.nextGrain - audio.ac.currentTime).toFixed(2),
                                          fire: audio.fire.map(f => f.paused ? "-" : `${f.currentTime.toFixed(2)}@${f.volume.toFixed(2)}`) }; },
   };
   document.addEventListener("DOMContentLoaded", () => document.body.classList.toggle("muted", audio.muted));
