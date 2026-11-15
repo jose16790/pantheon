@@ -10,7 +10,7 @@
 # You can also pass them as OPENROUTER_API_KEY, TMDB_API_KEY and ELEVENLABS_API_KEY. Set ADB_SERIAL to pick a TV.
 set -euo pipefail
 . "$(dirname "$0")/_adb.sh"
-send() { "$ADB" ${ADB_SERIAL:+-s "$ADB_SERIAL"} shell "am start -n dev.pantheon.adultspace/.MainActivity --es openrouter_key '$1' --es tmdb_key '$2' --es elevenlabs_key '$3'" </dev/null >/dev/null; }
+send() { "$ADB" ${ADB_SERIAL:+-s "$ADB_SERIAL"} shell "am broadcast -n dev.pantheon.adultspace/.control.AdbControl --es openrouter_key '$1' --es tmdb_key '$2' --es elevenlabs_key '$3'" </dev/null >/dev/null; }
 # the themes' voices (ElevenLabs public library): voice id and owner. The Hand of the King; the Headmaster's portrait.
 VOICES="Ix8C14HEHgIQkJswik2o:967a5f5942acb44079855690c3a292c8637dbc54ca90436a477c5551af7d761c htZQqY7WtacRNV7s62Iy:397f6e5b26cb1a88607f90099883087353fba26ec45768706222eca2327d87fc"
 

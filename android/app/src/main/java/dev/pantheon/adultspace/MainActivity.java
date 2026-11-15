@@ -108,12 +108,7 @@ public class MainActivity extends Activity {
         String asked = getIntent().getStringExtra("theme");               // adb shell am start ... --es theme got
         if (asked != null) themes.set(asked);
         getWindow().getDecorView().setBackgroundColor(themes.current().windowBackground());
-        if (getIntent().hasExtra("pantheon_home_mode"))                        // scripts/home.sh apply / undo
-            dev.pantheon.adultspace.home.HomeGuard.setHomeMode(this, getIntent().getBooleanExtra("pantheon_home_mode", false));
         dev.pantheon.adultspace.home.HomeGuard.ensure(this, "Pantheon opened");
-        String agentAsked = getIntent().getStringExtra("agent_url");           // adb shell am start ... --es agent_url http://...
-        if (agentAsked != null) AgentConfig.set(this, agentAsked);
-        takeKeys(getIntent());
         voice = new VoiceAgent(this, new AgentClient(() -> AgentConfig.url(this)), () -> themes.current().id(),
                 (vs, text) -> web.evaluateJavascript("window.pantheonVoice && pantheonVoice(" + JSONObject.quote(vs) + ","
                         + (text == null ? "null" : JSONObject.quote(text)) + ")", null));
@@ -217,38 +212,16 @@ public class MainActivity extends Activity {
     /** Home pressed while we're the home screen: back to the castle. */
     @Override protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        if (intent.hasExtra("pantheon_home_mode"))
-            dev.pantheon.adultspace.home.HomeGuard.setHomeMode(this, intent.getBooleanExtra("pantheon_home_mode", false));
         dev.pantheon.adultspace.home.HomeGuard.ensure(this, "Pantheon opened");
         String asked = intent.getStringExtra("theme");
         if (asked != null && themes.set(asked)) applyTheme();
-        // testing the weather wizard: adb shell am start ... --es wx thunder [--es wx_at 2026-11-14T14:00Z]  (--es wx live: back to real)
-        String wx = intent.getStringExtra("wx");
-        if (wx != null) web.evaluateJavascript("window.pantheonWxTest && pantheonWxTest(" + JSONObject.quote(wx) + ","
-                + (intent.getStringExtra("wx_at") == null ? "null" : JSONObject.quote(intent.getStringExtra("wx_at"))) + ")", null);
-        String agentAsked = intent.getStringExtra("agent_url");
-        if (agentAsked != null) AgentConfig.set(this, agentAsked);
-        takeKeys(intent);
-        if (intent.hasExtra("sleep_minutes")) prefs().edit().putInt("sleep_minutes", intent.getIntExtra("sleep_minutes", 30)).apply();   // 0: off
-        if (intent.hasExtra("sleep_test")) {                         // testing: pretend the remote's been idle until N s before sleep
-            int left = intent.getIntExtra("sleep_test", 35);
-            idle.postDelayed(() -> lastInput = System.currentTimeMillis() - sleepAfter() + left * 1000L, 1500);
-        }
-        // testing the agentic remote: adb shell am start ... --es council '{"minutes":45,"like":"like Severance"}'
-        if (intent.getBooleanExtra("fresh_conversation", false)) agent.forgetConversation();   // testing: a new conversation
-        String ask = intent.getStringExtra("ask");                       // testing the voice: as if said to the mic
-        if (ask != null) voice.handleText(ask);
-        String council = intent.getStringExtra("council");
-        if (council != null) {
-            web.evaluateJavascript("window.pantheonCouncil && (pantheonCouncil.show(), pantheonCouncil.message(pantheonCouncil.el && '…', true))", null);
-            agent.recommend(council);
-        }
         if (intent.hasCategory(Intent.CATEGORY_HOME)) { isHome = true; web.evaluateJavascript("window.tvHome && tvHome()", null); }
         else if (intent.getBooleanExtra(EXTRA_GO_HOME, false)) web.evaluateJavascript("window.tvHome && tvHome()", null);
     }
 
     @Override protected void onResume() {
-        super.onResume(); showing = this; web.onResume(); web.requestFocus(); weather.start(); news.start();
+        super.onResume(); showing = this;
+        if (pendingControl != null) { Intent pc = pendingControl; pendingControl = null; web.postDelayed(() -> applyControl(pc), 2500); } web.onResume(); web.requestFocus(); weather.start(); news.start();
         stillHere(); idle.removeCallbacks(idleTick); idle.postDelayed(idleTick, 1000);
         web.evaluateJavascript("window.pantheonAudio && pantheonAudio.resume()", null);
     }
@@ -260,14 +233,35 @@ public class MainActivity extends Activity {
     }
     @Override protected void onDestroy() { voice.destroy(); agent.shutdown(); web.destroy(); super.onDestroy(); }
 
-    /** The agent's keys, sent once by scripts/agent-keys.sh (never logged). */
-    private void takeKeys(Intent i) {
-        String or = i.getStringExtra("openrouter_key"), tm = i.getStringExtra("tmdb_key"), el = i.getStringExtra("elevenlabs_key");
-        if (or == null && tm == null && el == null) return;
-        if (or != null || tm != null) dev.pantheon.adultspace.agent.Keys.set(this, or, tm);
-        if (el != null) dev.pantheon.adultspace.agent.Keys.setElevenLabs(this, el);
-        i.removeExtra("openrouter_key"); i.removeExtra("tmdb_key"); i.removeExtra("elevenlabs_key");
-        Log.i(dev.pantheon.adultspace.agent.Agent.TAG, "keys updated; agent ready: " + dev.pantheon.adultspace.agent.Keys.ready(this));
+    // ---------------------------------------------------------------- commands from a computer (control/AdbControl.java)
+    private static Intent pendingControl;
+
+    /** From AdbControl (adb only): act on it now if Pantheon is showing, else open Pantheon and act once it is. */
+    public static void control(Context c, Intent i) {
+        MainActivity m = showing;
+        if (m != null) { m.runOnUiThread(() -> m.applyControl(i)); return; }
+        pendingControl = i;
+        c.startActivity(new Intent(c, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+    }
+
+    private void applyControl(Intent intent) {
+        // testing the weather wizard: --es wx thunder [--es wx_at 2026-11-14T14:00Z]  (--es wx live: back to real)
+        String wx = intent.getStringExtra("wx");
+        if (wx != null) web.evaluateJavascript("window.pantheonWxTest && pantheonWxTest(" + JSONObject.quote(wx) + ","
+                + (intent.getStringExtra("wx_at") == null ? "null" : JSONObject.quote(intent.getStringExtra("wx_at"))) + ")", null);
+        if (intent.hasExtra("sleep_test")) {                         // testing: pretend the remote's been idle until N s before sleep
+            int left = dev.pantheon.adultspace.control.AdbControl.intExtra(intent, "sleep_test", 35);
+            idle.postDelayed(() -> lastInput = System.currentTimeMillis() - sleepAfter() + left * 1000L, 1500);
+        }
+        // testing the agentic remote: --es council '{"minutes":45,"like":"like Severance"}'
+        if (dev.pantheon.adultspace.control.AdbControl.boolExtra(intent, "fresh_conversation")) agent.forgetConversation();   // testing: a new conversation
+        String ask = intent.getStringExtra("ask");                       // testing the voice: as if said to the mic
+        if (ask != null) voice.handleText(ask);
+        String council = intent.getStringExtra("council");
+        if (council != null) {
+            web.evaluateJavascript("window.pantheonCouncil && (pantheonCouncil.show(), pantheonCouncil.message(pantheonCouncil.el && '…', true))", null);
+            agent.recommend(council);
+        }
     }
 
     /**

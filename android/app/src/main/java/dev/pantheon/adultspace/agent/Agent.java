@@ -212,7 +212,7 @@ public final class Agent {
         // the question goes first and alone: OpenRouter's web search searches with it (memory goes in the instructions)
         StringBuilder ctx = new StringBuilder(text).append("\n\n(Local time: ")
                 .append(new java.text.SimpleDateFormat("EEEE d MMMM yyyy, h:mm a", Locale.UK).format(new java.util.Date()))
-                .append(". The TV is in ").append(dev.pantheon.adultspace.weather.Weather.country(act)).append(".)\n");
+                .append(". The TV is in ").append(where()).append(".)\n");
         if (NEWSY.matcher(text).find()) ctx.append("\nToday's headlines (from Google News, for the TV's country):\n").append(headlines());
         if (FLIGHTS.matcher(text).find()) ctx.append("\nLive US airport status from the FAA (only airports with delays are listed; "
                 + "an airport not listed has no reported delay):\n").append(faa());
@@ -244,6 +244,15 @@ public final class Agent {
         speaker.say(theme(), out);
         ui(() -> say.state("reply", reply(Speaker.plain(out))));
         if (!"forget_all".equals(action)) memory.exchange(text, out);
+    }
+
+    /** Where the TV is, in words ("Kitchener, Canada"): a bare "CA" reads as California. */
+    private String where() {
+        String cc = dev.pantheon.adultspace.weather.Weather.country(act), city = "";
+        try { city = new JSONObject(act.getSharedPreferences("pantheon_weather", android.content.Context.MODE_PRIVATE).getString("place", "{}")).optString("city"); }
+        catch (Exception ignored) { }
+        String country = cc.isEmpty() ? "" : new Locale("", cc).getDisplayCountry(Locale.ENGLISH);
+        return (city.isEmpty() ? "" : city + ", ") + (country.isEmpty() ? "an unknown country" : country);
     }
 
     private String headlines() {
