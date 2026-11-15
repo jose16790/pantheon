@@ -62,7 +62,7 @@ final class OpenRouter {
         String t = r.getJSONArray("choices").getJSONObject(0).getJSONObject("message").optString("content", "");
         return t.replaceAll(",?\\s*\\[[^\\]]*\\]\\((?:https?://)[^)]*\\)", "")       // [source](https://…) citations
                 .replaceAll("\\(?https?://\\S+\\)?", "")
-                .replaceAll("[*_#`]", "").replaceAll("[\\s\\u00A0\\u202F]+([.,!?;:])", "$1").replaceAll("\\s{2,}", " ").trim();
+                .replaceAll("[*_#`]", "").replaceAll("[\\s\\p{Z}\\u200B]+([.,!?;:])", "$1").replaceAll("\\s{2,}", " ").trim();
     }
 
     private JSONObject chat(String model, String system, String user, int maxTokens, int timeoutMs) throws Exception {

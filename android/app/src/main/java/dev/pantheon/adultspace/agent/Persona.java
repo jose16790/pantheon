@@ -11,7 +11,8 @@ final class Persona {
     private static final String DETAILED = " The viewer asked for detail: up to six sentences, about 120 words.";
     private static final String RULES = " Plain words for the "
             + "ear, no lists, no links, no markdown, numbers as you'd say them. Never invent facts: if the information you "
-            + "were given doesn't answer it, say so in character. Where it's natural, and at most twice, add a performance "
+            + "were given doesn't answer it, say so in character. Use what you remember about the viewer and the conversation "
+            + "naturally, the way a trusted servant would; never recite it unless asked. Where it's natural, and at most twice, add a performance "
             + "cue in square brackets, e.g. [chuckles], [sighs], [laughs softly], [clears throat], [whispers].";
 
     static String of(String theme) { return of(theme, false); }
@@ -33,6 +34,12 @@ final class Persona {
             default:
                 return "You are the voice of Pantheon, the viewer's TV home screen: warm, quick and a little witty." + RULES;
         }
+    }
+
+    /** What the two sides are called in this theme: {the viewer, the voice}. */
+    static String[] names(String theme) {
+        return "got".equals(theme) ? new String[] { "The King", "The Hand" }
+             : "hogwarts".equals(theme) ? new String[] { "You", "The Headmaster" } : new String[] { "You", "Pantheon" };
     }
 
     /** How the Council's picks are announced, when you asked for them by voice. */

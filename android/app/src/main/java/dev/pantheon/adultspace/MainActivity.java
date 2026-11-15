@@ -274,6 +274,7 @@ public class MainActivity extends Activity {
      * search for it (Google TV shows the title with a button for each service), else the app's own search or the app.
      */
     public void openTitle(String pkg, String title) {
+        if (agent != null) agent.opened(title);                    // remembered: not suggested again soon
         if (pkg != null && installed(pkg)) {
             String q = Uri.encode(title);
             String link = "com.netflix.ninja".equals(pkg) ? "https://www.netflix.com/search?q=" + q

@@ -249,6 +249,12 @@ Press the mic and ask anything. Simple commands still run instantly on the TV; e
 | "what's going on around the world?" | answers from today's headlines |
 | "tell me about NVIDIA's GR00T", anything else | searches the web, then answers |
 
+**He remembers.** The last few exchanges (15 minutes), so follow-ups work ("and what about San Francisco?", "tell me
+more", "play the second one"); and up to 40 short facts about you, learnt from what you say ("follows NVIDIA and AI
+news") or told directly ("remember that I don't like horror"). Ask "what do you know about me?", or have him forget one
+thing or everything. The facts shape his answers and the Council's picks (and titles you've opened aren't suggested
+again). It's all kept only on the TV, in Pantheon's private storage.
+
 He answers in character (loyal, shrewd, dry; "Your Grace") in a deep, expressive voice: ElevenLabs v3, which
 performs the chuckles and sighs he writes in. Recorded lines ("At once, Your Grace.") play instantly while he works;
 live answers take a few seconds. In Hogwarts, the Headmaster's portrait speaks instead. Without an ElevenLabs key the

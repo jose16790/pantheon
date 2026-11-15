@@ -151,7 +151,8 @@
     // a request said to the mic ("something light for 40 minutes"): the panel opens and asks with those words
     fromVoice(text) {
       if (!this.open) this.show();
-      this.st.like = text; this.input.value = text;
+      this.st.t = 0; this.st.kind = 0; this.st.genres = [];             // spoken: the words decide the time and genres
+      this.st.like = text; this.input.value = text; this.render();
       this.ask();
     },
 

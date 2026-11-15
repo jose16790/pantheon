@@ -39,9 +39,10 @@ final class Council {
     private final Tmdb tmdb;
     private final OpenRouter or;
     private final ExecutorService pool;
+    private final Memory memory;
 
-    Council(Context c, Tmdb tmdb, OpenRouter or, ExecutorService pool) {
-        this.ctx = c.getApplicationContext(); this.tmdb = tmdb; this.or = or; this.pool = pool;
+    Council(Context c, Tmdb tmdb, OpenRouter or, ExecutorService pool, Memory memory) {
+        this.ctx = c.getApplicationContext(); this.tmdb = tmdb; this.or = or; this.pool = pool; this.memory = memory;
     }
 
     void recommend(JSONObject req, Listener out) {
@@ -122,6 +123,7 @@ final class Council {
             List<JSONObject> picks = decide(ask, fit, knd);
             JSONArray arr = new JSONArray();
             for (JSONObject p : picks) arr.put(p);
+            memory.picks(arr);                                      // so "play the second one" works
             out.picks(new JSONObject().put("picks", arr).put("summary", ask).put("region", svc.region));
             StringBuilder names = new StringBuilder();
             for (JSONObject p : picks) names.append(names.length() == 0 ? "" : "; ").append(p.optString("title")).append(" (").append(p.optString("type"))
@@ -148,7 +150,10 @@ final class Council {
                 + " \"suggest\": [20 well-known, well-liked films and series that fit the request closely, exact official titles, a mix of both"
                 + " unless they asked for one kind; not the titles they named],"
                 + " \"mood\": a few words on the feel they want}";
-        try { return or.json(sys, text, 700, 9000); }
+        String known = memory.factsText(), opened = memory.openedTitles();
+        String user = text + (known.isEmpty() ? "" : "\n\nWhat we know about this viewer:\n" + known)
+                + (opened.isEmpty() ? "" : "\nRecently watched (don't suggest these): " + opened);
+        try { return or.json(sys, user, 700, 9000); }
         catch (Exception e) { Log.w(Agent.TAG, "understand failed: " + e.getMessage()); return new JSONObject(); }
     }
 
@@ -281,6 +286,9 @@ final class Council {
                         .put("criteria", new JSONArray().put("Poor fit: wrong feel, length or kind").put("Decent fit").put("Great fit: exactly what they asked for")));
             }
             JSONObject state = new JSONObject().put("viewer_request", ask).put("candidates", list.toString());
+            String known = memory.factsText(), opened = memory.openedTitles();
+            if (!known.isEmpty()) state.put("what_we_know_about_the_viewer", known);
+            if (!opened.isEmpty()) state.put("recently_watched_so_a_poor_fit_now", opened);
             JSONObject ans = or.decide(state, questions, 6000);
             for (int i = 0; i < fit.size(); i++) {
                 JSONObject a = ans.optJSONObject("c" + i);
