@@ -11,7 +11,7 @@ import java.util.Map;
 public final class GameOfThronesTheme implements ThemeData {
     @Override public String id() { return "got"; }
     @Override public String displayName() { return "Game of Thrones"; }
-    @Override public int windowBackground() { return 0xFF060403; }
+    @Override public int windowBackground() { return 0xFF000000; }
 
     @Override public Map<String, String> colors() {
         Map<String, String> c = new LinkedHashMap<>();
@@ -22,7 +22,7 @@ public final class GameOfThronesTheme implements ThemeData {
         c.put("accent-soft", "#f0cfae");
         c.put("spine", "#d8b470");
         c.put("panel-1", "#16100d");
-        c.put("panel-2", "#060403");
+        c.put("panel-2", "#000000");
         return c;
     }
 

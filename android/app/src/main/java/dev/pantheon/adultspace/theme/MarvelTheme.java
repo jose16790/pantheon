@@ -11,7 +11,7 @@ import java.util.Map;
 public final class MarvelTheme implements ThemeData {
     @Override public String id() { return "marvel"; }
     @Override public String displayName() { return "Marvel"; }
-    @Override public int windowBackground() { return 0xFF0A0203; }
+    @Override public int windowBackground() { return 0xFF000000; }
 
     @Override public Map<String, String> colors() {
         Map<String, String> c = new LinkedHashMap<>();
@@ -22,7 +22,7 @@ public final class MarvelTheme implements ThemeData {
         c.put("accent-soft", "#ffe3a3");
         c.put("spine", "#ffcf3f");
         c.put("panel-1", "#1a0b0d");
-        c.put("panel-2", "#060203");
+        c.put("panel-2", "#000000");
         return c;
     }
 

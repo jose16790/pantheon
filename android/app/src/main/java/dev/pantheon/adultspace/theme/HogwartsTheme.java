@@ -18,7 +18,7 @@ public final class HogwartsTheme implements ThemeData {
         c.put("accent-soft", "#f6d9bb");
         c.put("spine", "#e8c97e");
         c.put("panel-1", "#111a26");
-        c.put("panel-2", "#05070b");
+        c.put("panel-2", "#000000");
         return c;
     }
 

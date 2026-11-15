@@ -17,8 +17,8 @@
     const st = document.createElement("style");
     st.textContent = `
       #news { position: absolute; right: 112px; top: 204px; width: 560px; padding: 16px 0 6px; color: var(--ink);
-              background: linear-gradient(180deg, rgba(10,8,6,.66), rgba(10,8,6,.52)); border: 1px solid rgba(214,178,110,.38);
-              box-shadow: 0 10px 30px rgba(0,0,0,.45), inset 0 0 0 4px rgba(10,8,6,.35), inset 0 0 0 5px rgba(214,178,110,.16); }
+              background: linear-gradient(180deg, rgba(0,0,0,.66), rgba(0,0,0,.52)); border: 1px solid rgba(214,178,110,.38);
+              box-shadow: 0 10px 30px rgba(0,0,0,.45), inset 0 0 0 4px rgba(0,0,0,.35), inset 0 0 0 5px rgba(214,178,110,.16); }
       #news:not(.ready) { display: none; }
       #news .head { text-align: center; font: 700 15px/1 "Cinzel", Georgia, serif; letter-spacing: .34em; text-transform: uppercase;
                     color: var(--gold-hi, #e9c98a); opacity: .9; padding-bottom: 12px; margin: 0 24px 2px;

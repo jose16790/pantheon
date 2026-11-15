@@ -16,10 +16,10 @@
   const HOGWARTS_IMAGES = { castle: "themes/hogwarts/img/castle.jpg", windowsA: "themes/hogwarts/img/windows_a_crop.png", windowsB: "themes/hogwarts/img/windows_b_crop.png",
                             shelf: "themes/hogwarts/img/shelf.jpg", greenhouse: "themes/hogwarts/img/greenhouse_beasts.jpg", mist: "themes/hogwarts/img/mist.png" };
   const PREVIEW = {   // browser preview only; on the TV the Java ThemeData classes are the source of truth
-    hogwarts: { id: "hogwarts", name: "Hogwarts", colors: { gold: "#d9b45f", "gold-hi": "#f3dc9a", ink: "#f4ead6", accent: "#f0c29c", "accent-soft": "#f6d9bb", spine: "#e8c97e", "panel-1": "#111a26", "panel-2": "#05070b" }, images: HOGWARTS_IMAGES },
-    got:      { id: "got", name: "Game of Thrones", mascot: "dragon", colors: { gold: "#c9a45c", "gold-hi": "#f2d49a", ink: "#ede5d8", accent: "#e8a070", "accent-soft": "#f0cfae", spine: "#d8b470", "panel-1": "#16100d", "panel-2": "#060403" },
+    hogwarts: { id: "hogwarts", name: "Hogwarts", colors: { gold: "#d9b45f", "gold-hi": "#f3dc9a", ink: "#f4ead6", accent: "#f0c29c", "accent-soft": "#f6d9bb", spine: "#e8c97e", "panel-1": "#111a26", "panel-2": "#000000" }, images: HOGWARTS_IMAGES },
+    got:      { id: "got", name: "Game of Thrones", mascot: "dragon", colors: { gold: "#c9a45c", "gold-hi": "#f2d49a", ink: "#ede5d8", accent: "#e8a070", "accent-soft": "#f0cfae", spine: "#d8b470", "panel-1": "#16100d", "panel-2": "#000000" },
                 images: { castle: "themes/got/img/throne.jpg", shelf: "themes/got/img/shelf.jpg" } },
-    marvel:   { id: "marvel", name: "Marvel", complete: false, colors: { gold: "#e62429", "gold-hi": "#ffcf3f", ink: "#ffffff", accent: "#f2c14e", "accent-soft": "#ffe3a3", spine: "#ffcf3f", "panel-1": "#1a0b0d", "panel-2": "#060203" }, images: HOGWARTS_IMAGES },
+    marvel:   { id: "marvel", name: "Marvel", complete: false, colors: { gold: "#e62429", "gold-hi": "#ffcf3f", ink: "#ffffff", accent: "#f2c14e", "accent-soft": "#ffe3a3", spine: "#ffcf3f", "panel-1": "#1a0b0d", "panel-2": "#000000" }, images: HOGWARTS_IMAGES },
   };
   const CARDS = [   // the picker's cards: [id, name, picture, line]
     ["hogwarts", "Hogwarts", "themes/hogwarts/img/castle.jpg", "The castle, the owl, the films"],

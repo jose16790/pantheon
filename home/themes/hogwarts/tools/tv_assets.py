@@ -15,6 +15,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.normpath(os.path.join(HERE, "..", "..", ".."))        # home/: the page (paths below are relative to it)
 OUT = os.path.normpath(os.path.join(SRC, "..", "android", "app", "src", "main", "assets", "www"))   # the TV app's copy
 WIDE = 1936
+sys.path.insert(0, os.path.join(SRC, "tools")); from oled import oled
 OWL_H = 128                                      # matches OWL_H in index.html
 
 # never ship a page whose script doesn't parse: on the TV that's a frozen screen
@@ -77,7 +78,7 @@ BAKE = {   # the same gradients as #hshade, #lvig and #gvig in index.html
 for rel, alphas in BAKE.items():
     im = Image.open(os.path.join(SRC, rel)).convert("RGB")
     im = im.resize((WIDE, round(WIDE * im.height / im.width)), Image.LANCZOS)
-    shaded(im, alphas).save(os.path.join(OUT, rel), quality=88)
+    oled(shaded(im, alphas)).save(os.path.join(OUT, rel), quality=90)   # night scenes: true black on OLED (tools/oled.py)
 for rel in ("themes/hogwarts/img/windows_a_crop.png", "themes/hogwarts/img/windows_b_crop.png"):
     im = Image.open(os.path.join(SRC, rel))
     k = WIDE / Image.open(os.path.join(SRC, "themes/hogwarts/img/castle.jpg")).width
