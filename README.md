@@ -29,7 +29,7 @@ behind the remote's microphone. Designed and built by **Jose** ([jose16790](http
 You need a Mac (with [Homebrew](https://brew.sh)) or Linux, and your TV on the same Wi-Fi.
 
 ```bash
-git clone https://github.com/jose16790/pantheon.git && cd pantheon && ./install.sh
+git clone https://github.com/jose16790/pantheon-tv-of-the-gods.git && cd pantheon-tv-of-the-gods && ./install.sh
 ```
 
 The installer sets up the tools, builds Pantheon, shows you how to turn on wireless debugging on the TV, pairs with
