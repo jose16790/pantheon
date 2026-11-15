@@ -28,16 +28,16 @@
     build() {
       const s = document.createElement("style");
       s.textContent = `
-        #council { position: absolute; z-index: 45; inset: 0; display: flex; gap: 70px; padding: 92px 112px 70px; box-sizing: border-box;
+        #council { position: absolute; z-index: 45; inset: 0; display: flex; gap: 70px; padding: 70px 112px 56px; box-sizing: border-box;
                    background: radial-gradient(ellipse at 30% 20%, var(--panel-1, #241812), var(--panel-2, #0b0806) 80%);
                    opacity: 0; pointer-events: none; transition: opacity .3s; color: var(--ink); }
         #council.open { opacity: 1; }
         #council .form { width: 640px; flex: none; display: flex; flex-direction: column; }
-        #council .h { font: 600 54px/1.05 "Cinzel", Georgia, serif; color: var(--gold-hi); }
+        #council .h { font: 600 50px/1.05 "Cinzel", Georgia, serif; color: var(--gold-hi); }
         body:not([data-theme="got"]) #council .h { font-family: inherit; font-weight: 400; }
-        #council .sub { margin: 12px 0 34px; font-size: 22px; letter-spacing: .06em; opacity: .7; font-style: italic; }
+        #council .sub { margin: 10px 0 22px; font-size: 22px; letter-spacing: .06em; opacity: .7; font-style: italic; }
         #council .lab { font: 700 14px/1 "Cinzel", Georgia, serif; letter-spacing: .3em; text-transform: uppercase; color: var(--gold-hi); opacity: .8; margin: 0 0 14px; }
-        #council .zone { margin-bottom: 30px; padding: 14px 18px; margin-left: -18px; border-radius: 14px; border: 2px solid transparent; transition: border-color .2s, background .2s; }
+        #council .zone { margin-bottom: 16px; padding: 12px 18px; margin-left: -18px; border-radius: 14px; border: 2px solid transparent; transition: border-color .2s, background .2s; }
         #council .zone.foc { border-color: rgba(233,201,138,.55); background: rgba(255,255,255,.04); }
         #council .slider { position: relative; height: 34px; }
         #council .track { position: absolute; left: 0; right: 0; top: 15px; height: 4px; border-radius: 2px; background: rgba(255,255,255,.18); }
@@ -46,7 +46,7 @@
                          box-shadow: 0 0 0 5px rgba(233,201,138,.25), 0 3px 10px rgba(0,0,0,.6); }
         #council .tval { font-size: 30px; margin-top: 10px; }
         /* choices as wax seals: an empty ring, filled with red wax when chosen; the name beside it, never inside a box */
-        #council .pills { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 10px; }
+        #council .pills { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 10px; }
         #council .kinds { grid-template-columns: repeat(3, max-content); gap: 14px 40px; }
         #council .pill { display: flex; align-items: center; gap: 14px; min-width: 0; padding: 4px 0; color: var(--ink); opacity: .78;
                          font: 600 16.5px/1.2 "Cinzel", Georgia, serif; letter-spacing: .04em; transition: opacity .15s, color .15s; }
@@ -72,7 +72,7 @@
         #council input { width: 100%; box-sizing: border-box; font: inherit; font-size: 24px; padding: 14px 18px; border-radius: 12px; outline: none;
                          background: rgba(0,0,0,.35); color: var(--ink); border: 1.5px solid rgba(233,201,138,.35); }
         #council input::placeholder { color: var(--ink); opacity: .4; font-style: italic; }
-        #council .ask { align-self: flex-start; padding: 16px 40px; border-radius: 34px; font: 700 20px/1 "Cinzel", Georgia, serif; letter-spacing: .14em;
+        #council .ask { align-self: flex-start; margin-top: 4px; padding: 16px 40px; border-radius: 34px; font: 700 20px/1 "Cinzel", Georgia, serif; letter-spacing: .14em;
                         text-transform: uppercase; background: linear-gradient(180deg, #e9c98a, #b98f4e); color: #1a0f06; box-shadow: 0 6px 20px rgba(0,0,0,.5); }
         #council .zone.foc .ask { box-shadow: 0 0 0 4px #fff8e6, 0 6px 26px rgba(233,201,138,.4); transform: scale(1.05); }
         #council .res { flex: 1; min-width: 0; display: flex; flex-direction: column; }
