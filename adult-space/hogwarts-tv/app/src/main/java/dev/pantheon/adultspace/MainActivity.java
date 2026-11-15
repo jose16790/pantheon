@@ -73,6 +73,9 @@ public class MainActivity extends Activity {
     private WebView web;
     private boolean isHome;                                // started as the home screen
     private final Map<String, String> icons = new HashMap<>();
+    /** Intent extra: open Pantheon at the top of its home (the castle), like the remote's Home button. */
+    public static final String EXTRA_GO_HOME = "pantheon_go_home";
+
     private ThemeManager themes;
     private VoiceAgent voice;
 
@@ -169,6 +172,7 @@ public class MainActivity extends Activity {
         String agentAsked = intent.getStringExtra("agent_url");
         if (agentAsked != null) AgentConfig.set(this, agentAsked);
         if (intent.hasCategory(Intent.CATEGORY_HOME)) { isHome = true; web.evaluateJavascript("window.tvHome && tvHome()", null); }
+        else if (intent.getBooleanExtra(EXTRA_GO_HOME, false)) web.evaluateJavascript("window.tvHome && tvHome()", null);
     }
 
     @Override protected void onResume() { super.onResume(); showing = this; web.onResume(); web.requestFocus(); }
@@ -184,6 +188,16 @@ public class MainActivity extends Activity {
 
     /** What the page can ask the TV to do. */
     private final class Bridge {
+        /** Pantheon: the TV's own settings ("wifi" for Wi-Fi, anything else for all of Settings). */
+        @JavascriptInterface public void openSettings(String which) {
+            runOnUiThread(() -> {
+                String action = "wifi".equals(which) ? android.provider.Settings.ACTION_WIFI_SETTINGS : android.provider.Settings.ACTION_SETTINGS;
+                if (start(new Intent(action))) return;
+                if (start(new Intent(android.provider.Settings.ACTION_SETTINGS))) return;
+                open("com.android.tv.settings");
+            });
+        }
+
         /** Pantheon: start listening (the page's mic icon). */
         @JavascriptInterface public void listen() { runOnUiThread(() -> voice.listen()); }
 

@@ -60,6 +60,30 @@ adb install -r dist/Pantheon-adult-space.apk
 
 The release build offers itself as a home screen. Choose it when you press Home, or set it as the default.
 
+## Pantheon as the home screen
+
+```bash
+scripts/home.sh apply      # Home on the remote opens Pantheon        (undo: scripts/home.sh undo)
+scripts/unbloat.sh         # list the ads, tracking and unused Google apps it would switch off
+scripts/unbloat.sh apply   # switch them off (reversible)            (undo: scripts/unbloat.sh undo)
+```
+
+Google's home is **never switched off**: on some Google TVs that leaves the TV stuck restarting (learnt by
+couch-tv). Pantheon is the chosen home instead, and its **Home watch** (`home/HomeWatch.java`, an accessibility
+service) brings Pantheon back whenever Google's home screen comes forward, at power on or on a short Home
+press. Google's home may flash up for a moment. **Holding Home** still opens Google's dashboard, with the
+Settings gear. A **crash guard** stands the watch aside for 10 minutes if Pantheon crashes twice in 5, so the TV
+can't get stuck.
+
+Pantheon's top row (Up from the dock): **Wi-Fi**, **TV settings**, **Ask** (voice), **Customise**.
+
+`unbloat.sh` switches off ambient mode (the idle screensaver with ads), ad services, feedback reporting, the
+Google TV / Play Movies shop, Play Games, Gallery and TalkBack. It refuses anything the TV needs: the homes, the
+setup app, Play Services, the Play Store, the remote, Bluetooth, voice, the keyboard, HDMI and Wi-Fi.
+
+Note: wireless debugging switches itself off when the TV restarts. Turn it back on in Developer options (the
+Mac stays paired).
+
 ## Voice
 
 **Simple commands run on the TV itself**, with no agent and no network (`voice/LocalCommands.java`):

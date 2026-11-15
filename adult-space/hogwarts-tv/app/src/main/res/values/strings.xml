@@ -5,4 +5,6 @@
     <string name="agent_url" translatable="false">http://192.168.1.100:8080/agent</string>
     <!-- the HDMI input the PlayStation tile opens: set your TV's (adb shell dumpsys tv_input lists the input ids) -->
     <string name="ps5_input" translatable="false">com.mediatek.tvinput/.hdmi.HDMIInputService/HW5</string>
+    <string name="home_watch_label" translatable="false">Pantheon Home watch</string>
+    <string name="home_watch_description">Keeps Pantheon as your home screen: when the TV opens Google\'s home (at power on or from the Home button), Pantheon comes straight back. It only notices which home came forward and reads nothing on screen.</string>
 </resources>

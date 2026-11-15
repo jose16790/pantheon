@@ -37,6 +37,7 @@
         android:hardwareAccelerated="true"
         android:largeHeap="true"
         android:supportsRtl="false"
+        android:name=".PantheonApp"
         android:networkSecurityConfig="@xml/network_security_config"
         android:theme="@style/Theme.Castle">
 
@@ -52,6 +53,19 @@
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- The Home watch (home/HomeWatch.java): Google's home stays on (switching it off can loop some Google TVs),
+             and this puts Pantheon back whenever it comes forward. Turned on by scripts/home.sh. -->
+        <service
+            android:name=".home.HomeWatch"
+            android:exported="true"
+            android:label="@string/home_watch_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data android:name="android.accessibilityservice" android:resource="@xml/home_watch" />
+        </service>
 
         <!-- Pantheon as the TV's assistant: holds android.app.role.ASSISTANT so the remote's mic button comes here.
              Taken with: adb shell cmd role add-role-holder android.app.role.ASSISTANT dev.pantheon.adultspace -->

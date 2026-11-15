@@ -32,3 +32,6 @@ adult-space/hogwarts-tv/app/src/main/assets/www/owl/*.webm
 adult-space/hogwarts-tv/app/src/main/assets/www/covers/
 adult-space/hogwarts-tv/app/src/main/res/drawable-nodpi/banner.jpg
 adult-space/docs/
+
+# per-TV undo lists written by scripts/unbloat.sh
+scripts/tvs/

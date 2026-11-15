@@ -5,8 +5,7 @@
 #   scripts/assistant.sh status       who has it now
 # Uses the TV adb is connected to (set ADB_SERIAL to pick one).
 set -euo pipefail
-ADB="${ADB:-$(command -v adb || echo /opt/homebrew/share/android-commandlinetools/platform-tools/adb)}"
-A() { "$ADB" ${ADB_SERIAL:+-s "$ADB_SERIAL"} shell "$@"; }
+. "$(dirname "$0")/_adb.sh"
 ROLE=android.app.role.ASSISTANT
 GOOGLE_ASSISTANT=com.google.android.katniss
 GOOGLE_RECOGNIZER=com.google.android.tts/com.google.android.apps.speech.tts.googletts.service.GoogleTTSRecognitionService

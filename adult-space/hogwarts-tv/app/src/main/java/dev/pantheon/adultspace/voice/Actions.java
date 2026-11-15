@@ -94,8 +94,10 @@ public final class Actions {
     static boolean key(Context c, String key) {
         AudioManager am = (AudioManager) c.getSystemService(Context.AUDIO_SERVICE);
         switch (key) {
-            case "home":
-                return start(c, new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME));
+            case "home":                                       // Pantheon's home, never the TV's own (Google's)
+                return start(c, new Intent(c, dev.pantheon.adultspace.MainActivity.class)
+                        .setAction(Intent.ACTION_MAIN).putExtra(dev.pantheon.adultspace.MainActivity.EXTRA_GO_HOME, true)
+                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP));
             case "volume_up":   am.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI); return true;
             case "volume_down": am.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI); return true;
             case "mute":        am.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_TOGGLE_MUTE, AudioManager.FLAG_SHOW_UI); return true;
