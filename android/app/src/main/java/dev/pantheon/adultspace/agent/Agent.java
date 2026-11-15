@@ -206,14 +206,16 @@ public final class Agent {
     /** A question: a recorded "one moment" at once, then the persona's answer from live sources, spoken and shown. */
     private void answer(String text, Say say) throws Exception {
         speaker.stock(theme(), "think");
-        StringBuilder ctx = new StringBuilder(memory.context(names()[0], names()[1])).append("\nThe viewer now asks: ").append(text).append("\nLocal time: ")
+        // the question goes first and alone: OpenRouter's web search searches with it (memory goes in the instructions)
+        StringBuilder ctx = new StringBuilder(text).append("\n\n(Local time: ")
                 .append(new java.text.SimpleDateFormat("EEEE d MMMM yyyy, h:mm a", Locale.UK).format(new java.util.Date()))
-                .append(". The TV is in ").append(dev.pantheon.adultspace.weather.Weather.country(act)).append(".\n");
+                .append(". The TV is in ").append(dev.pantheon.adultspace.weather.Weather.country(act)).append(".)\n");
         if (NEWSY.matcher(text).find()) ctx.append("\nToday's headlines (from Google News, for the TV's country):\n").append(headlines());
         if (FLIGHTS.matcher(text).find()) ctx.append("\nLive US airport status from the FAA (only airports with delays are listed; "
                 + "an airport not listed has no reported delay):\n").append(faa());
         boolean detailed = DETAIL.matcher(text).find();
-        String out = or.talk(Persona.of(theme(), detailed), ctx.toString(), true, detailed ? 320 : 110, 20000);
+        String mem = memory.context(names()[0], names()[1]);
+        String out = or.talk(Persona.of(theme(), detailed) + (mem.isEmpty() ? "" : "\n\n" + mem), ctx.toString(), true, detailed ? 420 : 180, 20000);
         Log.i(TAG, "answer: " + Speaker.plain(out));
         speaker.say(theme(), out);
         ui(() -> say.state("reply", reply(Speaker.plain(out))));

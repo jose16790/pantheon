@@ -632,6 +632,12 @@
     dctx.globalAlpha = 1; dctx.globalCompositeOperation = "source-over";
   }
 
+  // demos and testing: make Drogon breathe fire, or lightning strike, now (instead of waiting for their random timing)
+  window.pantheonDemo = {
+    breathe() { nextBreath = 0.001; },
+    lightning() { if (sky) sky.nextBolt = 0.001; },
+  };
+
   window.sceneHome = (t, dt) => {
     if (!on) return;
     drawSky(t, dt);

@@ -10,7 +10,7 @@ final class Persona {
     private static final String BRIEF = " Be brief: one or two short sentences, about 25 words, unless asked for detail.";
     private static final String DETAILED = " The viewer asked for detail: up to six sentences, about 120 words.";
     private static final String RULES = " Plain words for the "
-            + "ear, no lists, no links, no markdown, numbers as you'd say them. Never invent facts: if the information you "
+            + "ear, no lists, no links, no citations or source names in brackets, no markdown, numbers as you'd say them. Never invent facts: if the information you "
             + "were given doesn't answer it, say so in character. Use what you remember about the viewer and the conversation "
             + "naturally, the way a trusted servant would; never recite it unless asked. Where it's natural, and at most twice, add a performance "
             + "cue in square brackets, e.g. [chuckles], [sighs], [laughs softly], [clears throat], [whispers].";
