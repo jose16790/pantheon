@@ -11,6 +11,9 @@ behind the remote's microphone. Designed and built by **Jose** ([jose16790](http
 
 **What Pantheon adds, in every theme:**
 
+- **The Small Council:** an agentic remote that picks what to watch from your services (time, genres, "something
+  like…"), using TMDB, Jev and DeepSeek. Voice uses it too.
+
 - **It's the home screen, for real.** The Home button and turning on the TV go to Pantheon, never Google's home, and
   the ads and bloat are switched off (reversibly).
 - **Voice:** the remote's mic button is Pantheon's. Simple commands ("open YouTube", "volume to 30", "switch to
@@ -50,6 +53,7 @@ home/                       the home screen: one page, shared by every theme
     theme.js                applies a theme (colours, pictures, scene) and the theme picker
     weather.js              the weather wizard: the weather outside, the sun's and moon's positions, the moon's phase
     news.js                 the headlines panel
+    council.js              the Small Council: the agentic remote's panel
   fonts/                    Cinzel (SIL OFL)
   img/logos/                the dock's app logos (fetched)
   themes/
@@ -69,10 +73,11 @@ android/                    the Android TV app: a full-screen WebView and a JS b
     home/                   the Home watch and its self-repair (Pantheon stays the home screen)
     weather/Weather.java    where the TV is (from its internet connection) and the weather there
     news/News.java          the headlines, by the TV's country
+    agent/                  the agentic remote and smarter voice: TMDB, Jev and DeepSeek (via OpenRouter)
     theme/                  ThemeData: GameOfThronesTheme, HogwartsTheme, MarvelTheme; ThemeManager (default: got)
 build.sh                    copies home/ into the app and builds dist/Pantheon.apk
 install.sh                  one-command setup: tools, build, pairing, install, home screen, unbloat, theme
-scripts/                    home.sh, unbloat.sh, assistant.sh, add-music.sh, fetch-fanart.sh
+scripts/                    home.sh, unbloat.sh, assistant.sh, agent-keys.sh, add-music.sh, fetch-fanart.sh
 docs/hogwarts-tv-home/      the original castle project's README, guide and prompt, kept for reference
 ```
 
@@ -200,6 +205,39 @@ class H(BaseHTTPRequestHandler):
         s.send_response(200); s.send_header('Content-Type','application/json'); s.end_headers(); s.wfile.write(out)
 HTTPServer(('0.0.0.0',8080),H).serve_forever()"
 ```
+
+## The Small Council (the agentic remote)
+
+"What should I watch?", answered from **your** services. Up from the dock to the screen-and-star icon (*The Small
+Council* in Game of Thrones, *The Sorting Hat* in Hogwarts), or just say it to the mic: "something light for 40
+minutes", "like Severance but funnier".
+
+- **Time you have:** 20 minutes to 3 hours, or any length (series are matched by their episode length).
+- **Movie or series**, **genre pills**, and **"something like…"** in your own words.
+- **Picks:** eight cards with the poster, the service it streams on for you, and one line on why. OK opens it.
+
+How it decides, all on the TV (`android/.../agent/`):
+
+| Step | Who | |
+|---|---|---|
+| Understand your words, suggest fitting titles | **DeepSeek V4.1 Flash** (OpenRouter) | ~1 s |
+| Find candidates on your installed services, in the TV's country, that fit your time | **TMDB** | ~1–2 s |
+| Score every candidate against your request in one call | **Jev 1.14**, TypeSafe's decision model (OpenRouter) | ~0.3 s |
+| One line on why each pick fits | **DeepSeek** | after the cards appear |
+
+Voice goes through the same agent: simple commands still run instantly on the TV; everything else is routed by Jev
+(what to watch → the Council; a named title → opened in the app that has it; TV control; questions → a short answer).
+
+**Setup:** an [OpenRouter](https://openrouter.ai/keys) key (a few dollars of credit lasts months: a pick costs a small
+fraction of a cent) and a free [TMDB](https://www.themoviedb.org/settings/api) key. Then:
+
+```bash
+./scripts/agent-keys.sh          # asks for both (hidden), checks them, sends them to the TV
+```
+
+The keys stay on the TV, in Pantheon's private storage; they're never in the repo. `./scripts/agent-keys.sh --clear`
+removes them. Test from a computer: `adb shell am start -n dev.pantheon.adultspace/.MainActivity --es council '{"minutes":45,"like":"something cozy"}'`
+and `adb logcat -s Pantheon/Agent`.
 
 ## Themes
 

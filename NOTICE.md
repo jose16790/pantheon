@@ -46,6 +46,13 @@ fan theme; the names and the world they evoke belong to their owners (below).
 The headlines panel shows the top stories from Google News' public RSS feeds (national, world and business, for the
 TV's country). Only each story's headline, source and time are shown; they belong to their publishers.
 
+## The agentic remote
+
+- Film and series data, posters and where each title streams: **[TMDB](https://www.themoviedb.org)**. This product uses
+  the TMDB API but is not endorsed or certified by TMDB. TMDB's watch-provider data comes from JustWatch.
+- Decisions: **Jev** by TypeSafe AI; words: **DeepSeek V4.1 Flash** (Qwen 3.7 Flash as a backup), both through
+  [OpenRouter](https://openrouter.ai), with your own key.
+
 ## Weather and astronomy
 
 - Weather data from [Open-Meteo](https://open-meteo.com), under CC BY 4.0. The TV's rough location comes from

@@ -80,6 +80,7 @@ public class MainActivity extends Activity {
     private VoiceAgent voice;
     private dev.pantheon.adultspace.weather.Weather weather;          // the weather wizard's data (weather/Weather.java)
     private dev.pantheon.adultspace.news.News news;                   // the home's headlines (news/News.java)
+    private dev.pantheon.adultspace.agent.Agent agent;                // the agentic remote and smarter voice (agent/)
 
     /** The castle while it's on screen, so the mic button (assist/PantheonSession) can make it listen. */
     private static volatile MainActivity showing;
@@ -110,6 +111,7 @@ public class MainActivity extends Activity {
         dev.pantheon.adultspace.home.HomeGuard.ensure(this, "Pantheon opened");
         String agentAsked = getIntent().getStringExtra("agent_url");           // adb shell am start ... --es agent_url http://...
         if (agentAsked != null) AgentConfig.set(this, agentAsked);
+        takeKeys(getIntent());
         voice = new VoiceAgent(this, new AgentClient(() -> AgentConfig.url(this)), () -> themes.current().id(),
                 (vs, text) -> web.evaluateJavascript("window.pantheonVoice && pantheonVoice(" + JSONObject.quote(vs) + ","
                         + (text == null ? "null" : JSONObject.quote(text)) + ")", null));
@@ -117,6 +119,8 @@ public class MainActivity extends Activity {
                 json -> web.evaluateJavascript("window.pantheonWeather && pantheonWeather(" + json + ")", null));
         news = new dev.pantheon.adultspace.news.News(this,
                 json -> web.evaluateJavascript("window.pantheonNews && pantheonNews(" + json + ")", null));
+        agent = new dev.pantheon.adultspace.agent.Agent(this, js -> web.evaluateJavascript(js, null));
+        voice.setAgent(agent);
         Log.i(AgentClient.TAG, "agent endpoint: " + AgentConfig.url(this) + " · theme: " + themes.current().id());
         if ((getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0) WebView.setWebContentsDebuggingEnabled(true);
 
@@ -187,6 +191,13 @@ public class MainActivity extends Activity {
                 + (intent.getStringExtra("wx_at") == null ? "null" : JSONObject.quote(intent.getStringExtra("wx_at"))) + ")", null);
         String agentAsked = intent.getStringExtra("agent_url");
         if (agentAsked != null) AgentConfig.set(this, agentAsked);
+        takeKeys(intent);
+        // testing the agentic remote: adb shell am start ... --es council '{"minutes":45,"like":"like Severance"}'
+        String council = intent.getStringExtra("council");
+        if (council != null) {
+            web.evaluateJavascript("window.pantheonCouncil && (pantheonCouncil.show(), pantheonCouncil.message(pantheonCouncil.el && '…', true))", null);
+            agent.recommend(council);
+        }
         if (intent.hasCategory(Intent.CATEGORY_HOME)) { isHome = true; web.evaluateJavascript("window.tvHome && tvHome()", null); }
         else if (intent.getBooleanExtra(EXTRA_GO_HOME, false)) web.evaluateJavascript("window.tvHome && tvHome()", null);
     }
@@ -200,7 +211,31 @@ public class MainActivity extends Activity {
         web.evaluateJavascript("window.pantheonAudio && pantheonAudio.pause()", null);   // silent the moment an app opens
         weather.stop(); news.stop(); web.onPause(); super.onPause();
     }
-    @Override protected void onDestroy() { voice.destroy(); web.destroy(); super.onDestroy(); }
+    @Override protected void onDestroy() { voice.destroy(); agent.shutdown(); web.destroy(); super.onDestroy(); }
+
+    /** The agent's keys, sent once by scripts/agent-keys.sh (never logged). */
+    private void takeKeys(Intent i) {
+        String or = i.getStringExtra("openrouter_key"), tm = i.getStringExtra("tmdb_key");
+        if (or == null && tm == null) return;
+        dev.pantheon.adultspace.agent.Keys.set(this, or, tm);
+        i.removeExtra("openrouter_key"); i.removeExtra("tmdb_key");
+        Log.i(dev.pantheon.adultspace.agent.Agent.TAG, "keys updated; agent ready: " + dev.pantheon.adultspace.agent.Keys.ready(this));
+    }
+
+    /**
+     * Open a title to watch: straight to its search in that app where the app takes a search link, else the TV's own
+     * search for it (Google TV shows the title with a button for each service), else the app's own search or the app.
+     */
+    public void openTitle(String pkg, String title) {
+        if (pkg != null && installed(pkg)) {
+            String q = Uri.encode(title);
+            String link = "com.netflix.ninja".equals(pkg) ? "https://www.netflix.com/search?q=" + q
+                    : "com.disney.disneyplus".equals(pkg) ? "https://www.disneyplus.com/search?q=" + q : null;
+            if (link != null && start(new Intent(Intent.ACTION_VIEW, Uri.parse(link)).setPackage(pkg))) return;
+        }
+        if (start(new Intent("android.search.action.GLOBAL_SEARCH").putExtra(SearchManager.QUERY, title))) return;
+        search(title, pkg);
+    }
 
     /** Switch theme (voice: "switch to Game of Thrones"). False for an unknown id. */
     public boolean switchTheme(String id) {
@@ -233,6 +268,23 @@ public class MainActivity extends Activity {
 
         /** Pantheon: the last headlines the TV fetched ({} before the first), as news/News.java keeps them. */
         @JavascriptInterface public String news() { return news.latest(); }
+
+        /** Pantheon: the agent has its keys (scripts/agent-keys.sh), so the remote's panel can ask it. */
+        @JavascriptInterface public boolean agentReady() { return agent.ready(); }
+
+        /** Pantheon: ask the agent what to watch; answers come back as pantheonCouncil.onPicks / onReasons / onError. */
+        @JavascriptInterface public void council(String json) { agent.recommend(json); }
+
+        /** Pantheon: bring up the on-screen keyboard for the field the page just focused. */
+        @JavascriptInterface public void keyboard() {
+            runOnUiThread(() -> {
+                android.view.inputmethod.InputMethodManager imm = (android.view.inputmethod.InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                if (imm != null) imm.showSoftInput(web, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);
+            });
+        }
+
+        /** Pantheon: open a title the agent picked, in the app that has it. */
+        @JavascriptInterface public void openTitle(String pkg, String title) { runOnUiThread(() -> MainActivity.this.openTitle(pkg, title)); }
 
         /** Pantheon: start listening (the page's mic icon). */
         @JavascriptInterface public void listen() { runOnUiThread(() -> voice.listen()); }

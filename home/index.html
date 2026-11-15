@@ -242,6 +242,7 @@
       <svg id="tvset" viewBox="0 0 24 24" fill="none" stroke="#f4ead6" stroke-width="1.6" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>
       <svg id="themesIcon" viewBox="0 0 24 24" fill="none" stroke="#f4ead6" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><path d="M3.5 18.5h17M4.5 16l-1.5-9 5 4 4-6.5 4 6.5 5-4-1.5 9z"/></svg>
       <svg id="soundIcon" viewBox="0 0 24 24" fill="none" stroke="#f4ead6" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path class="wave" d="M15.5 9a4.5 4.5 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/><path class="slash" d="M15.5 9.5l5 5M20.5 9.5l-5 5"/></svg>
+      <svg id="councilIcon" viewBox="0 0 24 24" fill="none" stroke="#f4ead6" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="15" height="11" rx="2"/><path d="M8.5 8.3v5.4l4.2-2.7z"/><path d="M7 20h6M10 16v4"/><path d="M20 2.5l.7 1.6 1.6.7-1.6.7-.7 1.6-.7-1.6-1.6-.7 1.6-.7z"/></svg>
       <svg id="mic" viewBox="0 0 24 24" fill="none" stroke="#f4ead6" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="11.5" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5v4M8.5 21.5h7"/></svg>
       <svg id="gear" viewBox="0 0 24 24" fill="none" stroke="#f4ead6" stroke-width="1.6" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2.8l1.6 2.2 2.7-.6.6 2.7 2.4 1.3-1 2.6 1 2.6-2.4 1.3-.6 2.7-2.7-.6L12 21.2l-1.6-2.2-2.7.6-.6-2.7-2.4-1.3 1-2.6-1-2.6 2.4-1.3.6-2.7 2.7.6z"/></svg>
     </div>
@@ -321,6 +322,7 @@
 <script src="themes/got/sounds/fire.js"></script>
 <script src="core/weather.js"></script>
 <script src="core/news.js"></script>
+<script src="core/council.js"></script>
 <script src="themes/got/scene.js"></script>
 <script src="core/theme.js"></script>
 <script>
@@ -909,6 +911,7 @@ addEventListener("keydown", e => {
   if (k.startsWith("Arrow") || k === "Enter") e.preventDefault();
   if (custom.open) { customKey(k); e.preventDefault(); return; }
   if (window.pantheonPicker && pantheonPicker.open) { pantheonPicker.key(k); e.preventDefault(); return; }
+  if (window.pantheonCouncil && pantheonCouncil.open) { pantheonCouncil.key(k); e.preventDefault(); return; }
   if (opening) return;
   if (section === 0 && gearOn) {
     if (k === "Enter" || k === " ") TOP[topSel].go();
@@ -945,11 +948,12 @@ addEventListener("keydown", e => {
 });
 window.tvBack = () => {
   if (window.pantheonPicker && pantheonPicker.open) { pantheonPicker.close(); return true; }
+  if (window.pantheonCouncil && pantheonCouncil.open) { pantheonCouncil.close(); return true; }
   if (custom.open) { closeCustom(); return true; }
   if (gearOn) { setGear(false); return true; }
   if (opening) return true; if (section > 0) { section--; return true; } return false;
 };
-window.tvHome = () => { if (custom.open) closeCustom(); setGear(false); section = 0; };                       // the remote's Home button, when this is the home screen
+window.tvHome = () => { if (window.pantheonCouncil && pantheonCouncil.open) pantheonCouncil.close(); if (custom.open) closeCustom(); setGear(false); section = 0; };                       // the remote's Home button, when this is the home screen
 // ================================================================ CUSTOMISE
 // Every app on the TV and every HDMI port, as tiles: OK picks one for the dock (numbered in order, six at most) or
 // drops it. Below, where the films open: an app with direct links in config.js, the TV's own search, or the search of
@@ -960,6 +964,8 @@ const TOP = [
   { id: "#tvset", tip: "TV settings", go: () => tvSettings("all") },
   { id: "#themesIcon", tip: "Themes",  go: () => window.pantheonPicker && pantheonPicker.show() },
   { id: "#soundIcon",  tip: "Sound",   go: () => { if (window.pantheonAudio) $("#gearTip").textContent = pantheonAudio.toggle() ? "Sound on" : "Muted"; } },
+  { id: "#councilIcon", get tip() { return window.pantheonCouncilIcon ? pantheonCouncilIcon() : "What to watch"; },
+                       go: () => window.pantheonCouncil && pantheonCouncil.show() },        // the agentic remote (core/council.js)
   { id: "#mic",   tip: "Ask",         go: () => pantheonListen() },
   { id: "#gear",  tip: "Customise",   go: () => openCustom() },
 ];
@@ -1097,7 +1103,7 @@ function frame(now) {
     }
   }
   const t = now / 1000;
-  if (warm > 0 || custom.open) return requestAnimationFrame(frame);       // still decoding, or the Customise panel covers it all                  // the pictures are still decoding
+  if (warm > 0 || custom.open || (window.pantheonCouncil && pantheonCouncil.open)) return requestAnimationFrame(frame);       // still decoding, or the Customise panel covers it all                  // the pictures are still decoding
   let pg;
   if (warmPlan.length) { [pg, boost] = warmPlan.shift(); page.x = pg; page.v = 0; if (!warmPlan.length) liftCurtain(); }   // visiting each section
   else { boost = 0; pg = hash("pg") ? (page.x = +hash("pg")) : clamp(step(page, section, dt), 0, 2); }

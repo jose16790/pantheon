@@ -25,6 +25,8 @@ import java.util.Locale;
  *   launch  {app}      open an installed app by its name ("disney plus", "Crave") or package
  *   key     {key}      home, play_pause, play, pause, next, previous, volume_up, volume_down, mute
  *   search  {query}    the TV's own search for a title
+ *   volume  {percent}  set the volume (0-100)
+ *   theme   {id}       switch Pantheon's theme: got, hogwarts, marvel
  *
  * Anything else is logged and skipped. Nothing here pays, signs in or types anything.
  */
@@ -47,6 +49,8 @@ public final class Actions {
                 case "launch": ok = launch(a, o.optString("app")); break;
                 case "key":    ok = key(a, o.optString("key")); break;
                 case "search": ok = search(a, o.optString("query")); break;
+                case "volume": ok = o.has("percent") && setVolume(a, o.optInt("percent")); break;
+                case "theme":  ok = a instanceof dev.pantheon.adultspace.MainActivity && ((dev.pantheon.adultspace.MainActivity) a).switchTheme(o.optString("id")); break;
                 default:       ok = false; Log.w(TAG, "unknown action " + o);
             }
             Log.i(TAG, (ok ? "✓ " : "✗ ") + o);

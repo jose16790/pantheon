@@ -37,6 +37,10 @@ public final class VoiceAgent {
     private final Supplier<String> theme;
     private SpeechRecognizer rec;
     private boolean listening;
+    private dev.pantheon.adultspace.agent.Agent brain;          // the agent on the TV (agent/), when it has its keys
+
+    /** The on-TV agent: anything the simple commands don't cover goes to it, when it has its keys. */
+    public void setAgent(dev.pantheon.adultspace.agent.Agent a) { brain = a; }
 
     public VoiceAgent(Activity act, AgentClient agent, Supplier<String> theme, Listener ui) {
         this.act = act; this.agent = agent; this.theme = theme; this.ui = ui;
@@ -140,6 +144,7 @@ public final class VoiceAgent {
             return;
         }
         state("heard", prompt);
+        if (brain != null && brain.ready()) { brain.voice(prompt, this::state); return; }
         agent.send(prompt, theme.get(), new AgentClient.Callback() {
             @Override public void onReply(int status, String body) {
                 act.runOnUiThread(() -> {
