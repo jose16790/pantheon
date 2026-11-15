@@ -325,6 +325,7 @@
 <script src="core/council.js"></script>
 <script src="themes/got/scene.js"></script>
 <script src="core/theme.js"></script>
+<script src="core/conversation.js"></script>
 <script>
 const $ = s => document.querySelector(s);
 const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
@@ -947,6 +948,7 @@ addEventListener("keydown", e => {
   e.preventDefault();
 });
 window.tvBack = () => {
+  if (window.pantheonConvoClose && pantheonConvoClose()) return true;
   if (window.pantheonPicker && pantheonPicker.open) { pantheonPicker.close(); return true; }
   if (window.pantheonCouncil && pantheonCouncil.open) { pantheonCouncil.close(); return true; }
   if (custom.open) { closeCustom(); return true; }
