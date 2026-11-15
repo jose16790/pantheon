@@ -489,7 +489,7 @@
   }
   window.pantheonAudio = {
     pause() { audio.paused = true; [...(audio.fire || []), audio.music].forEach(a => a && a.pause()); if (audio.ac) audio.ac.suspend(); },
-    resume() { audio.paused = false; if (audio.music) { audio.musicLvl = 0; playTheme(); } },   // back home: your theme again
+    resume() { audio.paused = false; if (audio.music) { audio.musicLvl = 0; playTheme(); } rollScroll(); },   // back home: your theme again, the greeting unrolled
     toggle() { audio.muted = !audio.muted; try { localStorage.setItem("pantheon_mute", audio.muted ? "1" : "0"); } catch (e) { }
                document.body.classList.toggle("muted", audio.muted); return !audio.muted; },
     thunder, get muted() { return audio.muted; },
@@ -642,6 +642,52 @@
     drawFire(dt);
   };
 
+  // ---------------------------------------------------------------- the greeting: a parchment scroll under the clock
+  // A line from the royal court for the time of day (a different one each day), unrolled each time you come home.
+  const GREET = {
+    morning:   ["Good morrow, Your Grace.", "The realm wakes for you, Your Grace.", "Rise, Your Grace. The court awaits.", "Long may you reign, Your Grace."],
+    afternoon: ["The realm awaits your command, Your Grace.", "The small council is assembled, Your Grace.", "The day is yours to rule, Your Grace.", "All hail His Grace."],
+    evening:   ["The torches are lit, Your Grace.", "A feast awaits, Your Grace.", "The hall is yours tonight, Your Grace.", "The wine is poured, Your Grace. Rest your crown."],
+    night:     ["Night gathers, Your Grace. Your watch begins.", "Even kings must sleep, Your Grace.", "The realm is quiet. Rest, Your Grace.", "The castle sleeps. Long may you reign."],
+  };
+  function greeting(d) {   // morning 5-12, afternoon 12-17, evening 17-21, night 21-5 (the small hours belong to the night before)
+    const h = d.getHours(), part = h >= 5 && h < 12 ? "morning" : h >= 12 && h < 17 ? "afternoon" : h >= 17 && h < 21 ? "evening" : "night";
+    const day = Math.floor((d.getTime() - d.getTimezoneOffset() * 6e4 - (h < 5 ? 864e5 : 0)) / 864e5);
+    return GREET[part][day % GREET[part].length];
+  }
+  let scroll = null;
+  function makeScroll() {
+    const st = document.createElement("style");
+    st.textContent = `
+      .gotscroll { position: relative; display: inline-block; margin: 24px 0 0 6px; }
+      .gotscroll .paper { padding: 11px 34px 12px; color: #3b2611; text-shadow: none; white-space: nowrap;
+        font: italic 600 26px/1.25 Georgia, "Times New Roman", serif; letter-spacing: .01em;
+        background: linear-gradient(180deg, rgba(60,35,10,.28), rgba(0,0,0,0) 22%, rgba(0,0,0,0) 78%, rgba(60,35,10,.32)),
+                    linear-gradient(90deg, #c4a46c, #e4cf9f 10%, #eedfb8 50%, #e2ca97 90%, #c09f68);
+        box-shadow: 0 8px 22px rgba(0,0,0,.55); clip-path: inset(0 100% 0 0); }
+      .gotscroll .rod { position: absolute; top: -7px; bottom: -7px; width: 15px; border-radius: 8px;
+        background: linear-gradient(90deg, #4a2f14, #a5814b 40%, #d8bd85 55%, #5b3b19); box-shadow: 0 4px 10px rgba(0,0,0,.6); }
+      .gotscroll .rod::before, .gotscroll .rod::after { content: ""; position: absolute; left: 2px; width: 11px; height: 7px; border-radius: 3px;
+        background: linear-gradient(90deg, #8a6a2c, #f0d58a, #8a6a2c); }
+      .gotscroll .rod::before { top: -4px; } .gotscroll .rod::after { bottom: -4px; }
+      .gotscroll .l { left: -8px; } .gotscroll .r { right: -8px; }
+      .gotscroll.open .paper { clip-path: inset(0 0 0 0); transition: clip-path 1.6s cubic-bezier(.35,.6,.2,1); }
+      .gotscroll.open .r { transform: none !important; transition: transform 1.6s cubic-bezier(.35,.6,.2,1); }`;
+    document.head.appendChild(st);
+    const el = document.createElement("div"); el.className = "gotscroll";
+    el.innerHTML = '<div class="paper"></div><div class="rod l"></div><div class="rod r"></div>';
+    document.querySelector("#clock").appendChild(el);
+    return { el, paper: el.querySelector(".paper"), r: el.querySelector(".r"), text: "" };
+  }
+  function rollScroll() {   // roll it up, then unroll it (with today's line for this time of day)
+    if (!scroll || !on) return;
+    const s = scroll; s.text = greeting(new Date()); s.paper.textContent = s.text;
+    s.el.classList.remove("open"); s.el.style.display = "";
+    s.r.style.transform = `translateX(${-(s.paper.offsetWidth - 2)}px)`;
+    clearTimeout(s.t); s.t = setTimeout(() => s.el.classList.add("open"), 700);
+  }
+  setInterval(() => { if (scroll && on && greeting(new Date()) !== scroll.text) rollScroll(); }, 60000);   // a new part of the day
+
   // ---------------------------------------------------------------- switching to and from this scene
   SCENES.got = {
     garden: false,
@@ -663,6 +709,7 @@
       sky = sky || makeSky(); sky.cv.style.display = sky.flash.style.display = "";
       room = room || makeRoom(); room.layers.forEach(l => (l.im.style.display = "")); [room.shade, room.rays, room.dust, ...room.fog.map(f => f.el)].forEach(e => (e.style.display = ""));
       startAudio(); audio.on = true;
+      scroll = scroll || makeScroll(); rollScroll();
       jet = jet || makeJet();
       setFilms(seasons()); coverFallbacks();
       const lib = $("#toLib"); if (lib && lib.firstChild) lib.firstChild.textContent = "The Seasons";
@@ -677,6 +724,7 @@
       if (sky) { sky.cv.style.display = sky.flash.style.display = "none"; }
       if (room) { room.layers.forEach(l => (l.im.style.display = "none")); [room.shade, room.rays, room.dust, ...room.fog.map(f => f.el)].forEach(e => (e.style.display = "none")); }
       audio.on = false; window.pantheonAudio.pause(); audio.paused = false;
+      if (scroll) { scroll.el.style.display = "none"; clearTimeout(scroll.t); }
       if (jet) { jet.cv.remove(); jet = null; }
       for (const i in roast) if (roast[i].el) roast[i].el.style.filter = "";
       roast = {}; fire = [];

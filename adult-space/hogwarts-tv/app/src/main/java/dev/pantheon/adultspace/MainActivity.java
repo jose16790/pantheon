@@ -79,6 +79,7 @@ public class MainActivity extends Activity {
     private ThemeManager themes;
     private VoiceAgent voice;
     private dev.pantheon.adultspace.weather.Weather weather;          // the weather wizard's data (weather/Weather.java)
+    private dev.pantheon.adultspace.news.News news;                   // the home's headlines (news/News.java)
 
     /** The castle while it's on screen, so the mic button (assist/PantheonSession) can make it listen. */
     private static volatile MainActivity showing;
@@ -112,8 +113,10 @@ public class MainActivity extends Activity {
         voice = new VoiceAgent(this, new AgentClient(() -> AgentConfig.url(this)), () -> themes.current().id(),
                 (vs, text) -> web.evaluateJavascript("window.pantheonVoice && pantheonVoice(" + JSONObject.quote(vs) + ","
                         + (text == null ? "null" : JSONObject.quote(text)) + ")", null));
- weather = new dev.pantheon.adultspace.weather.Weather(this,
+        weather = new dev.pantheon.adultspace.weather.Weather(this,
                 json -> web.evaluateJavascript("window.pantheonWeather && pantheonWeather(" + json + ")", null));
+        news = new dev.pantheon.adultspace.news.News(this,
+                json -> web.evaluateJavascript("window.pantheonNews && pantheonNews(" + json + ")", null));
         Log.i(AgentClient.TAG, "agent endpoint: " + AgentConfig.url(this) + " · theme: " + themes.current().id());
         if ((getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0) WebView.setWebContentsDebuggingEnabled(true);
 
@@ -189,13 +192,13 @@ public class MainActivity extends Activity {
     }
 
     @Override protected void onResume() {
-        super.onResume(); showing = this; web.onResume(); web.requestFocus(); weather.start();
+        super.onResume(); showing = this; web.onResume(); web.requestFocus(); weather.start(); news.start();
         web.evaluateJavascript("window.pantheonAudio && pantheonAudio.resume()", null);
     }
     @Override protected void onPause() {
         if (showing == this) showing = null;
         web.evaluateJavascript("window.pantheonAudio && pantheonAudio.pause()", null);   // silent the moment an app opens
-        weather.stop(); web.onPause(); super.onPause();
+        weather.stop(); news.stop(); web.onPause(); super.onPause();
     }
     @Override protected void onDestroy() { voice.destroy(); web.destroy(); super.onDestroy(); }
 
@@ -227,6 +230,9 @@ public class MainActivity extends Activity {
 
         /** Pantheon: the last weather the TV fetched ({} before the first), as weather/Weather.java keeps it. */
         @JavascriptInterface public String weather() { return weather.latest(); }
+
+        /** Pantheon: the last headlines the TV fetched ({} before the first), as news/News.java keeps them. */
+        @JavascriptInterface public String news() { return news.latest(); }
 
         /** Pantheon: start listening (the page's mic icon). */
         @JavascriptInterface public void listen() { runOnUiThread(() -> voice.listen()); }

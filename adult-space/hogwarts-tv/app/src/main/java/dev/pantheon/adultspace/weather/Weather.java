@@ -88,22 +88,29 @@ public final class Weather {
         }
     }
 
+    /** The TV's country (two letters, e.g. "CA", "IN"), from its last location; "" before the first. */
+    public static String country(Context c) {
+        try { return new JSONObject(c.getSharedPreferences("pantheon_weather", Context.MODE_PRIVATE).getString("place", "{}")).optString("cc"); }
+        catch (Exception e) { return ""; }
+    }
+
     /** Approximate coordinates of the TV's internet connection: cached for 6 h, then looked up again. */
     private JSONObject place() {
         try {
             JSONObject cached = new JSONObject(prefs.getString("place", "{}"));
-            if (System.currentTimeMillis() - cached.optLong("at", 0) < PLACE_EVERY && cached.has("lat")) return cached;
+            if (System.currentTimeMillis() - cached.optLong("at", 0) < PLACE_EVERY && cached.has("lat") && cached.has("cc")) return cached;
         } catch (Exception ignored) { }
         JSONObject p = null;
         try {
             JSONObject j = new JSONObject(get("https://ipapi.co/json/"));
             if (j.has("latitude")) p = new JSONObject().put("lat", j.getDouble("latitude")).put("lon", j.getDouble("longitude"))
-                    .put("city", j.optString("city")).put("country", j.optString("country_name")).put("tz", j.optString("timezone"));
+                    .put("city", j.optString("city")).put("country", j.optString("country_name")).put("cc", j.optString("country_code"))
+                    .put("tz", j.optString("timezone"));
         } catch (Exception e) { Log.w(TAG, "ipapi.co: " + e.getMessage()); }
         if (p == null) try {
             JSONObject j = new JSONObject(get("https://ipwho.is/"));
             if (j.optBoolean("success")) p = new JSONObject().put("lat", j.getDouble("latitude")).put("lon", j.getDouble("longitude"))
-                    .put("city", j.optString("city")).put("country", j.optString("country"))
+                    .put("city", j.optString("city")).put("country", j.optString("country")).put("cc", j.optString("country_code"))
                     .put("tz", j.optJSONObject("timezone") != null ? j.getJSONObject("timezone").optString("id") : "");
         } catch (Exception e) { Log.w(TAG, "ipwho.is: " + e.getMessage()); }
         if (p == null) {                                        // offline: keep the last place, however old
