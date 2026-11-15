@@ -1,21 +1,21 @@
-# Contributing to Pantheon
+# Making Pantheon your own
 
-Thanks for wanting to help. Pantheon is small and opinionated; a few rules keep it that way.
+Pantheon is open source (MIT), and it's a personal project: **this repository doesn't take pull requests**. Fork it
+and do whatever you like with your copy: new themes, a different agent, your own art. Bug reports are welcome as
+issues.
 
 ## Getting set up
 
 ```bash
 ./install.sh --build-only     # tools + the APK, no TV needed
-./test.sh                     # every check (run it before every PR)
+./test.sh                     # every check
 ```
 
 To preview the home screen without a TV, serve `home/` with any static server and open
 `index.html?theme=got` (add `&wx=thunder&at=2026-11-14T21:00` to try a weather). The page simulates the TV's apps.
 
-## How we work
+## Tips for your fork
 
-- **One change, one branch, one pull request.** `feature/…`, `fix/…`, `docs/…`. Describe what changed and how you
-  checked it (on a real TV if it touches the scene or the agent).
 - **`./test.sh` passes.** Add a test when you add pure logic (Java: `android/app/src/test`; JS: `tests/js`).
 - **Respect the TV's budget.** No canvas blend modes, no per-frame work that could be baked once; check the frame
   rate on the device (`adb shell dumpsys gfxinfo dev.pantheon.adultspace`). See
@@ -39,7 +39,7 @@ rights to. AI-generated art is fine when generated for the project; say how it w
 Never commit keys, tokens, keystores or `.env` files. Agent keys belong on the TV (`scripts/agent-keys.sh`); the
 repo has secret scanning and push protection on.
 
-## Releases (maintainer)
+## Releases
 
 `scripts/make-release-key.sh` once (your own signing key, never committed), then `scripts/release.sh vX.Y.Z`:
 checks, a signed APK, a tag and a GitHub Release with notes from `CHANGELOG.md`.
