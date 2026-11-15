@@ -395,7 +395,7 @@
       // the crackle's bed
       audio.fireBus = ac.createGain(); audio.fireBus.gain.value = 0; audio.fireBus.connect(audio.master);
       const rl = ac.createBiquadFilter(), rh = ac.createBiquadFilter(), rg = ac.createGain();   // and a soft, steady roar under it
-      rl.type = "lowpass"; rl.frequency.value = 700; rh.type = "highpass"; rh.frequency.value = 90; rg.gain.value = .18;   // 9 dB under the crackle
+      rl.type = "lowpass"; rl.frequency.value = 700; rh.type = "highpass"; rh.frequency.value = 90; rg.gain.value = .25;   // ~6 dB under the burn
       src().connect(rl); rl.connect(rh); rh.connect(rg); rg.connect(audio.fireBus);
       if (window.FIRE_SOUND) {
         const bin = atob(FIRE_SOUND), u = new Uint8Array(bin.length);

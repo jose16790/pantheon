@@ -2,7 +2,7 @@
     reads   dragon/src/torch.mp4          one torch flame on black, with its sound (generated)
     writes  img/got/torch.webp            a seamless loop of the flame, see-through (black made clear)
             img/got/torch.js              window.TORCH_SHEET = {src, n, fps, w, h, frames}
-            sounds/got/fire.mp3           the crackle, louder, looped without a seam
+            sounds/got/fire.mp3           the fire's sound: a soft, steady burn (no pops), looped without a seam
             sounds/got/fire.js            the same, as window.FIRE_SOUND (base64), for Web Audio
 The clip also drew a glowing stub under the flame; only the flame above it is kept (the photo's iron baskets are the
 base). The loop's end is cross-faded into its start, so it never visibly restarts. Run with numpy + scipy + Pillow + ffmpeg."""
@@ -78,7 +78,9 @@ print(f"torch: {LOOP} frames of {w}x{H_OUT}, sheet {sheet.size}, stub cut at row
 # the crackle: louder (the clip's is very quiet), then its end cross-faded into its start
 os.makedirs(os.path.join(SRC, "sounds", "got"), exist_ok=True)
 pcm = subprocess.run(["ffmpeg", "-v", "error", "-i", CLIP, "-vn", "-ac", "2", "-ar", "44100", "-af",
-                      "highpass=f=60,acompressor=threshold=-30dB:ratio=3:attack=5:release=80,loudnorm=I=-20:TP=-2:LRA=11",
+                      "highpass=f=60,adeclick=w=20:o=75:t=2,adeclick=w=20:o=75:t=2,lowpass=f=1200,"   # a steady burn: the clicks and
+                      "acompressor=threshold=-28dB:ratio=10:attack=0.5:release=40,"                   # the bright cracks taken out,
+                      "loudnorm=I=-20:TP=-2:LRA=7,alimiter=limit=0.3:attack=1:release=30:level=false",
                       "-f", "f32le", "-"], capture_output=True, check=True).stdout
 snd = np.frombuffer(pcm, np.float32).reshape(-1, 2)
 sr, xf = 44100, int(0.8 * 44100)
