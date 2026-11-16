@@ -19,6 +19,14 @@
                   "Documentary", "Animation", "Family", "History"];
   const GCOLS = 3;
   const words = () => WORDS[document.body.dataset.theme] || WORDS._;
+  // Hogwarts marks a choice with a Golden Snitch (drawn here, original): faint and still until chosen, then gold, wings beating
+  const WING = "M19 11.5C15 5.5 7.5 2.5 1 3.5c2.6 1.6 4.4 3 5.4 4.3C4 8 2.6 8.8 1.8 10c3 .2 5.4.9 7 2 2.8.3 6.4.6 10.2 1z";
+  const RIBS = "M18 11.6C13 8 8 5.5 3.5 4.6M17.4 12.2c-3.2-1.6-6.6-2.6-10-3";
+  const SNITCH = `<svg class="snitch" viewBox="0 0 48 24" aria-hidden="true">
+    <g class="wing l"><path class="vane" d="${WING}"/><path class="rib" d="${RIBS}"/></g>
+    <g class="wing r" transform="translate(48 0) scale(-1 1)"><g class="beat"><path class="vane" d="${WING}"/><path class="rib" d="${RIBS}"/></g></g>
+    <circle class="ball" cx="24" cy="13" r="6.4"/><path class="etch" d="M18.2 12.2c3.6 1.6 8 1.6 11.6 0M24 6.6c-2 3.6-2 9.2 0 12.8"/>
+    <circle class="shine" cx="21.8" cy="10.6" r="1.7"/></svg>`;
   const esc = s => String(s || "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
   const C = window.pantheonCouncil = {
@@ -68,6 +76,29 @@
         body[data-theme="got"] #council .pill.on .seal { filter: drop-shadow(0 3px 4px rgba(0,0,0,.7)); opacity: 1; transform: scale(1.18) rotate(-8deg); background-color: transparent; box-shadow: none; }
         body[data-theme="got"] #council .pill.on .seal::after { display: none; }
         body[data-theme="got"] #council .pill.cur .seal { box-shadow: none; opacity: .65; }
+        #council .snitch { display: none; }
+        /* Hogwarts: a Golden Snitch instead of a seal */
+        body[data-theme="hogwarts"] #council .pill .seal { width: 46px; height: 23px; border: none; border-radius: 0; background: none; box-shadow: none; transform: none; }
+        body[data-theme="hogwarts"] #council .pill .seal::after { display: none; }
+        body[data-theme="hogwarts"] #council .pill.on .seal, body[data-theme="hogwarts"] #council .pill.cur .seal,
+        body[data-theme="hogwarts"] #council .pill.on.cur .seal { box-shadow: none; transform: none; background: none; }
+        body[data-theme="hogwarts"] #council .snitch { display: block; width: 100%; height: 100%; overflow: visible; opacity: .42; transition: opacity .2s, filter .2s; }
+        body[data-theme="hogwarts"] #council .snitch .vane { fill: rgba(240,232,214,.55); stroke: #cdbf9e; stroke-width: .7; }
+        body[data-theme="hogwarts"] #council .snitch .rib { fill: none; stroke: #b9a983; stroke-width: .5; }
+        body[data-theme="hogwarts"] #council .snitch .ball { fill: #9c9284; stroke: #6d6458; stroke-width: .6; }
+        body[data-theme="hogwarts"] #council .snitch .etch { fill: none; stroke: rgba(60,50,30,.55); stroke-width: .55; }
+        body[data-theme="hogwarts"] #council .snitch .shine { fill: rgba(255,255,255,.35); }
+        body[data-theme="hogwarts"] #council .pill.cur .snitch { opacity: .7; }
+        body[data-theme="hogwarts"] #council .pill.on .snitch { opacity: 1; filter: drop-shadow(0 0 5px rgba(255,205,90,.75)) drop-shadow(0 2px 3px rgba(0,0,0,.6));
+                                                                animation: snitchHover 1.6s ease-in-out infinite; }
+        body[data-theme="hogwarts"] #council .pill.on .snitch .vane { fill: rgba(250,246,234,.92); stroke: #e8cf8a; }
+        body[data-theme="hogwarts"] #council .pill.on .snitch .ball { fill: #e0ac35; stroke: #8a5f12; }
+        body[data-theme="hogwarts"] #council .pill.on .snitch .shine { fill: #fff3c4; }
+        body[data-theme="hogwarts"] #council .pill.on .snitch .wing.l,
+        body[data-theme="hogwarts"] #council .pill.on .snitch .beat { transform-origin: 19px 12px; animation: snitchBeat .16s ease-in-out infinite alternate; }
+        body[data-theme="hogwarts"] #council .pill.on.cur .snitch { filter: drop-shadow(0 0 9px rgba(255,220,120,.95)) drop-shadow(0 2px 3px rgba(0,0,0,.6)); }
+        @keyframes snitchBeat { from { transform: rotate(14deg) scaleY(.82); } to { transform: rotate(-12deg) scaleY(1); } }
+        @keyframes snitchHover { 0%, 100% { transform: translateY(1px); } 50% { transform: translateY(-2px); } }
         body[data-theme="got"] #council .pill.on.cur .seal { box-shadow: none; opacity: 1; filter: drop-shadow(0 0 8px rgba(255,214,160,.75)) drop-shadow(0 3px 4px rgba(0,0,0,.7)); }
         #council input { width: 100%; box-sizing: border-box; font: inherit; font-size: 24px; padding: 14px 18px; border-radius: 12px; outline: none;
                          background: rgba(0,0,0,.35); color: var(--ink); border: 1.5px solid rgba(233,201,138,.35); }
@@ -97,8 +128,8 @@
       el.innerHTML = `<div class="form">
           <div class="h"></div><div class="sub"></div>
           <div class="zone z0"><div class="lab">Time you have</div><div class="slider"><div class="track"></div><div class="fill"></div><div class="knob"></div></div><div class="tval"></div></div>
-          <div class="zone z1"><div class="lab">Movie or series</div><div class="pills kinds">${KINDS.map(k => `<div class="pill"><span class="seal"></span><span class="lbl">${k[1]}</span></div>`).join("")}</div></div>
-          <div class="zone z2"><div class="lab">In the mood for</div><div class="pills genres">${GENRES.map(g => `<div class="pill"><span class="seal"></span><span class="lbl">${g}</span></div>`).join("")}</div></div>
+          <div class="zone z1"><div class="lab">Movie or series</div><div class="pills kinds">${KINDS.map(k => `<div class="pill"><span class="seal">${SNITCH}</span><span class="lbl">${k[1]}</span></div>`).join("")}</div></div>
+          <div class="zone z2"><div class="lab">In the mood for</div><div class="pills genres">${GENRES.map(g => `<div class="pill"><span class="seal">${SNITCH}</span><span class="lbl">${g}</span></div>`).join("")}</div></div>
           <div class="zone z3"><div class="lab like"></div><input type="text" placeholder="like Severance, but funnier"></div>
           <div class="zone z4"><div class="ask"></div></div>
         </div>
